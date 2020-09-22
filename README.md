@@ -1,4 +1,5 @@
 # cloud-resource-counter
+
 Go utility for counting the resources in use at a cloud infrastructure provider.
 
 The cloud resource counter utility known as "cloud-resource-counter" inspects
@@ -19,6 +20,6 @@ The following command line arguments are supported:
 Argument         | Meaning
 -----------------|----------------------------------
 --output-file OF | Write the results to file OF
---profile PN:    | Use the credentials associated with shared profile PN
---region RN:     | View resource counts for the AWS region RN
---version:       |  Display version information
+--profile PN     | Use the credentials associated with shared profile PN
+--region RN      | View resource counts for the AWS region RN
+--version        | Display version information
