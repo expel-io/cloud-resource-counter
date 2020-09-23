@@ -12,6 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
+	color "github.com/logrusorgru/aurora"
 )
 
 // EC2Counts does stuff...
@@ -46,7 +48,7 @@ func EC2Counts(sess *session.Session) string {
 	InspectError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK\n")
+	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }

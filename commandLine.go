@@ -15,7 +15,8 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-var profileName, outputFileName, regionName string
+var profileName, outputFileName, regionName, traceFileName string
+var traceFile, outputFile *os.File
 
 // ProcessCommandLine inspects the command line for valid arguments
 //
@@ -23,6 +24,7 @@ var profileName, outputFileName, regionName string
 //   --output-file OF: Write the results to file OF
 //   --profile PN:     Use the credentials associated with shared profile PN
 //   --region RN:      View resource counts for the AWS region RN
+//   --trace-file TF:  Create a trace file that contains all calls to AWS.
 //   --version:        Display version information
 //
 func ProcessCommandLine() {
@@ -38,9 +40,10 @@ func ProcessCommandLine() {
 	defaultRegionName := os.Getenv("AWS_REGION")
 
 	// Define and parse the command line arguments...
+	flag.StringVar(&outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a file to save the generated CSV file")
 	flag.StringVar(&profileName, "profile", defaultProfileName, "AWS Profile Name")
-	flag.StringVar(&outputFileName, "output-file", "./resources.csv", "CSV Output File")
 	flag.StringVar(&regionName, "region", defaultRegionName, "Selects an AWS Region to use")
+	flag.StringVar(&traceFileName, "trace-file", "", "AWS Trace Log. Specify a file to record API calls being made.")
 	flag.BoolVar(&showVersion, "version", false, "Shows the version number.")
 	flag.Parse()
 
@@ -54,6 +57,18 @@ func ProcessCommandLine() {
 		os.Exit(0)
 	}
 
+	// Check whether a response file is being specified
+	if outputFileName != "" {
+		// Try to open the file for writing
+		outputFile = OpenFileForWriting(outputFileName, "CSV")
+	}
+
+	// Check whether a trace file is being specified
+	if traceFileName != "" {
+		// Try to open the file for writing
+		traceFile = OpenFileForWriting(traceFileName, "trace")
+	}
+
 	// What is the region being selected?
 	var displayRegionName string
 	if displayRegionName = regionName; displayRegionName == "" {
@@ -65,4 +80,9 @@ func ProcessCommandLine() {
 	DisplayActivity(" o %s: %s\n", color.Italic("AWS Profile"), profileName)
 	DisplayActivity(" o %s:  %s\n", color.Italic("AWS Region"), displayRegionName)
 	DisplayActivity(" o %s: %s\n", color.Italic("Output file"), outputFileName)
+
+	// Are we tracing?
+	if traceFileName != "" {
+		DisplayActivity(" o %s:  %s\n", color.Italic("Trace file"), traceFileName)
+	}
 }

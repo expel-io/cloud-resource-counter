@@ -11,6 +11,8 @@ package main
 import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+
+	color "github.com/logrusorgru/aurora"
 )
 
 // GetAccountID returns the Amazon Account ID for the supplied session.
@@ -30,8 +32,11 @@ func GetAccountID(sess *session.Session) string {
 	// Check for error
 	InspectError(err)
 
-	// Indicate end of activity
-	DisplayActivity("OK\n")
+	// Get the account ID
+	accountID := *result.Account
 
-	return *result.Account
+	// Indicate end of activity
+	DisplayActivity("OK (%s)\n", color.Bold(accountID))
+
+	return accountID
 }

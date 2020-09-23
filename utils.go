@@ -59,28 +59,41 @@ func AppendResults(results *[2][]string, colName string, colValue string) {
 }
 
 // SaveToCSV saves the data structure to a CSV file
-func SaveToCSV(csvData [][]string, outputFileName string) {
+func SaveToCSV(csvData [][]string, file *os.File) {
 	// Indicate activity
 	DisplayActivity(" * Writing to file...")
 
-	// Open the file
-	recordFile, err := os.Create(outputFileName)
-
-	// Check for error
-	InspectError(err)
-
 	// Remember to close the file...
-	defer recordFile.Close()
+	defer file.Close()
 
 	// Get the CSV Writer
-	writer := csv.NewWriter(recordFile)
+	writer := csv.NewWriter(file)
 
 	// Write all of the contents at once
-	err = writer.WriteAll(csvData)
+	err := writer.WriteAll(csvData)
 
 	// Check for Error
 	InspectError(err)
 
 	// Indicate success
 	DisplayActivity("OK\n")
+}
+
+// OpenFileForWriting does stuff...
+func OpenFileForWriting(fileName string, typeOfFile string) *os.File {
+	// Can we open it for writing?
+	file, err := os.Create(fileName)
+
+	// Check for error
+	if err != nil {
+		// Construct an error message
+		message := color.Red(fmt.Sprintf("Unable to open %s file for writing => %v", typeOfFile, err))
+
+		// Display error
+		fmt.Fprintln(os.Stderr, message)
+
+		os.Exit(1)
+	}
+
+	return file
 }

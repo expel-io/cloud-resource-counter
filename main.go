@@ -8,6 +8,8 @@ Summary: Top-level entry point for the tool. Provides main() function.
 package main
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
@@ -32,7 +34,13 @@ func main() {
 	 * Command line processing
 	 * =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
+	// Process all command line arguments
 	ProcessCommandLine()
+
+	// If we are writing to a trace file, remember to close it
+	if traceFile != nil {
+		defer traceFile.Close()
+	}
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Establish a valid AWS Session
@@ -47,12 +55,32 @@ func main() {
 		SharedConfigState: session.SharedConfigEnable,
 		Profile:           profileName,
 	}
+
+	var config *aws.Config = aws.NewConfig()
+
+	// Was region specified?
 	if regionName != "" {
-		input.Config = aws.Config{
+		config.MergeIn(&aws.Config{
 			Region: aws.String(regionName),
-		}
+		})
 	}
 
+	// Was tracing specified
+	if traceFile != nil {
+		config.MergeIn(&aws.Config{
+			LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody),
+			Logger: aws.LoggerFunc(func(args ...interface{}) {
+				fmt.Fprintln(traceFile, args...)
+			}),
+		})
+	}
+
+	// Attach the config
+	if config != nil {
+		input.Config = *config
+	}
+
+	// Ensure that we have a session
 	sess := session.Must(session.NewSessionWithOptions(input))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -80,7 +108,7 @@ func main() {
 	 * =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 	// Save our results to a CSV file
-	SaveToCSV(csvData, outputFileName)
+	SaveToCSV(csvData, outputFile)
 
 	// Show activity
 	DisplayActivity("\nSuccess!\n")

@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
+	color "github.com/logrusorgru/aurora"
 )
 
 // SpotInstances does stuff...
@@ -50,7 +52,7 @@ func SpotInstances(sess *session.Session) string {
 	InspectError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK\n")
+	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
+	color "github.com/logrusorgru/aurora"
 )
 
 // RDSInstances does stuff...
@@ -37,7 +38,7 @@ func RDSInstances(sess *session.Session) string {
 	InspectError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK\n")
+	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }
