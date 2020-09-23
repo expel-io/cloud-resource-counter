@@ -19,7 +19,29 @@ The following command line arguments are supported:
 
 Argument         | Meaning
 -----------------|----------------------------------
---output-file OF | Write the results to file OF
---profile PN     | Use the credentials associated with shared profile PN
---region RN      | View resource counts for the AWS region RN
---version        | Display version information
+--output-file OF | Write the results in Comma Separated Values format to file OF.
+--profile PN     | Use the credentials associated with shared profile PN.
+--region RN      | View resource counts for the AWS region RN.
+--trace-file TF  | Write a trace of all AWS calls to file TF.
+--version        | Display version information and then exit.
+
+## Minimal IAM Policy
+
+To use this utility, a bare minimal IAM Profile can be associated with anotherwise bare user account:
+
+```JSON
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeInstances",
+                "rds:DescribeDBInstances"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
