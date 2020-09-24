@@ -38,7 +38,10 @@ To use this utility, a bare minimal IAM Profile can be associated with anotherwi
             "Effect": "Allow",
             "Action": [
                 "ec2:DescribeInstances",
+                "ec2:DescribeRegions",
+                "lambda:ListFunctions",
                 "rds:DescribeDBInstances"
+                "s3:ListAllMyBuckets",
             ],
             "Resource": "*"
         }

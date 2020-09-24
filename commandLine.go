@@ -12,15 +12,18 @@ import (
 	"flag"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	color "github.com/logrusorgru/aurora"
 )
 
 var profileName, outputFileName, regionName, traceFileName string
 var traceFile, outputFile *os.File
+var allRegions bool
 
 // ProcessCommandLine inspects the command line for valid arguments
 //
 // Usage of cloud-resource-counter
+//   --all-regions:    Collect counts for all regions associated with the account
 //   --output-file OF: Write the results to file OF
 //   --profile PN:     Use the credentials associated with shared profile PN
 //   --region RN:      View resource counts for the AWS region RN
@@ -33,13 +36,14 @@ func ProcessCommandLine() {
 	// What is our default profile?
 	var defaultProfileName string
 	if defaultProfileName = os.Getenv("AWS_PROFILE"); defaultProfileName == "" {
-		defaultProfileName = "default"
+		defaultProfileName = session.DefaultSharedConfigProfile
 	}
 
 	// What is our default region
 	defaultRegionName := os.Getenv("AWS_REGION")
 
 	// Define and parse the command line arguments...
+	flag.BoolVar(&allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account.")
 	flag.StringVar(&outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a file to save the generated CSV file")
 	flag.StringVar(&profileName, "profile", defaultProfileName, "AWS Profile Name")
 	flag.StringVar(&regionName, "region", defaultRegionName, "Selects an AWS Region to use")
@@ -68,11 +72,16 @@ func ProcessCommandLine() {
 		// Try to open the file for writing
 		traceFile = OpenFileForWriting(traceFileName, "trace")
 	}
+}
 
+// DisplayCommandLineSettings does stuff...
+func DisplayCommandLineSettings(resolvedRegionName string) {
 	// What is the region being selected?
 	var displayRegionName string
-	if displayRegionName = regionName; displayRegionName == "" {
-		displayRegionName = "(specified by the profile)"
+	if allRegions {
+		displayRegionName = "(All regions supported by this account)"
+	} else {
+		displayRegionName = resolvedRegionName
 	}
 
 	// Output information about utility running

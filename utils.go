@@ -12,7 +12,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	color "github.com/logrusorgru/aurora"
 )
 
@@ -96,4 +99,42 @@ func OpenFileForWriting(fileName string, typeOfFile string) *os.File {
 	}
 
 	return file
+}
+
+// GetEC2Regions does stuff...
+func GetEC2Regions(sess *session.Session) []string {
+	// Get a new instances of the EC2 service
+	svc := ec2.New(sess)
+
+	// Construct the input
+	input := &ec2.DescribeRegionsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("opt-in-status"),
+				Values: []*string{
+					aws.String("opt-in-not-required"),
+					aws.String("opted-in"),
+				},
+			},
+		},
+	}
+
+	// Execute the command
+	result, err := svc.DescribeRegions(input)
+
+	// Do we have an error?
+	if err != nil {
+		// Display a message and then let's exit
+		fmt.Fprintln(os.Stderr, color.Red(fmt.Sprintf("Unable to get a list of valid EC2 regions: %v", err)))
+
+		os.Exit(1)
+	}
+
+	// Transform the array of results into an array of region names...
+	var regionNames []string
+	for _, regionInfo := range result.Regions {
+		regionNames = append(regionNames, *regionInfo.RegionName)
+	}
+
+	return regionNames
 }

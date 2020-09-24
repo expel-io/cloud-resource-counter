@@ -7,16 +7,9 @@ Summary: Top-level entry point for the tool. Provides main() function.
 
 package main
 
-import (
-	"fmt"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-)
-
 // The version of this tool. This needs to be exported into a file that can be
 // loaded into this program (and created by the build process).
-const version = "0.1"
+const version = "0.2"
 
 // The cloud resource counter utility known as "cloud-resource-counter" inspects
 // a cloud deployment (for now, only Amazon Web Services) to assess the number of
@@ -51,37 +44,10 @@ func main() {
 	// Session should be shared where possible to take advantage of
 	// configuration and credential caching. See the session package for
 	// more information.
-	input := session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-		Profile:           profileName,
-	}
+	sess := EstablishAwsSession()
 
-	var config *aws.Config = aws.NewConfig()
-
-	// Was region specified?
-	if regionName != "" {
-		config.MergeIn(&aws.Config{
-			Region: aws.String(regionName),
-		})
-	}
-
-	// Was tracing specified
-	if traceFile != nil {
-		config.MergeIn(&aws.Config{
-			LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody),
-			Logger: aws.LoggerFunc(func(args ...interface{}) {
-				fmt.Fprintln(traceFile, args...)
-			}),
-		})
-	}
-
-	// Attach the config
-	if config != nil {
-		input.Config = *config
-	}
-
-	// Ensure that we have a session
-	sess := session.Must(session.NewSessionWithOptions(input))
+	// Show command line settings
+	DisplayCommandLineSettings(*sess.Config.Region)
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Collect counts of all resources
@@ -98,6 +64,8 @@ func main() {
 	AppendResults(&resultData, "# of EC2 Instances", EC2Counts(sess))
 	AppendResults(&resultData, "# of Spot Instances", SpotInstances(sess))
 	AppendResults(&resultData, "# of RDS Instances", RDSInstances(sess))
+	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(sess))
+	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(sess))
 
 	// Blech: get a slice of the result data so that it can be used with WriteAll
 	var csvData [][]string
@@ -111,5 +79,5 @@ func main() {
 	SaveToCSV(csvData, outputFile)
 
 	// Show activity
-	DisplayActivity("\nSuccess!\n")
+	DisplayActivity("\nSuccess.\n")
 }
