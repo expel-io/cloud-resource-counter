@@ -1,4 +1,4 @@
-name: Go
+name: Build, Lint and Test
 
 on:
   push:

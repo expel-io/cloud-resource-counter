@@ -7,9 +7,11 @@ Summary: Top-level entry point for the tool. Provides main() function.
 
 package main
 
-// The version of this tool. This needs to be exported into a file that can be
-// loaded into this program (and created by the build process).
-const version = "0.2"
+// The version of this tool. This is supplied by the build process.
+var version string = "?.?.?"
+
+// This is the build date of this tool. This is also supplied by the build process.
+var date string = "<<never built>>"
 
 // The cloud resource counter utility known as "cloud-resource-counter" inspects
 // a cloud deployment (for now, only Amazon Web Services) to assess the number of

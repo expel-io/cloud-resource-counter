@@ -57,7 +57,7 @@ func ProcessCommandLine() {
 
 	// Did the user just want to see the version?
 	if showVersion {
-		DisplayActivity("%s, version %s\n", "Cloud Resource Counter", version)
+		DisplayActivity("%s, version %s (built %s)\n", "Cloud Resource Counter", version, date)
 		os.Exit(0)
 	}
 
