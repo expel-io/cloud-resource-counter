@@ -5,15 +5,43 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-// EstablishAwsSession does stuff...
-func EstablishAwsSession() *session.Session {
+// CallerIdentityService blah, blah, blah...
+type CallerIdentityService struct {
+	Client stsiface.STSAPI
+}
+
+// Account does shit...
+func (cis *CallerIdentityService) Account() (string, error) {
+	// Construct the input parameter
+	input := &sts.GetCallerIdentityInput{}
+
+	// Get the caller's identity
+	result, err := cis.Client.GetCallerIdentity(input)
+	if err != nil {
+		return "", err
+	}
+
+	return *result.Account, nil
+}
+
+// AWSServiceFactory is awesome
+type AWSServiceFactory struct {
+	Session *session.Session
+}
+
+// Init does stuff...
+func (awssf *AWSServiceFactory) Init() {
+	// Construct our session Options object
 	input := session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 		Profile:           profileName,
 	}
 
+	// Create an initial configuration
 	var config *aws.Config = aws.NewConfig()
 
 	// Was region specified?
@@ -43,5 +71,13 @@ func EstablishAwsSession() *session.Session {
 		sess = sess.Copy(&aws.Config{Region: aws.String("us-east-1")})
 	}
 
-	return sess
+	// Store the session in our struct
+	awssf.Session = sess
+}
+
+// GetCallerIdentityService ...
+func (awssf *AWSServiceFactory) GetCallerIdentityService() *CallerIdentityService {
+	return &CallerIdentityService{
+		Client: sts.New(awssf.Session),
+	}
 }

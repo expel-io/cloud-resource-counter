@@ -46,10 +46,13 @@ func main() {
 	// Session should be shared where possible to take advantage of
 	// configuration and credential caching. See the session package for
 	// more information.
-	sess := EstablishAwsSession()
+
+	// Create an AWS Service Factory
+	f := &AWSServiceFactory{}
+	f.Init()
 
 	// Show command line settings
-	DisplayCommandLineSettings(*sess.Config.Region)
+	DisplayCommandLineSettings(*f.Session.Config.Region)
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Collect counts of all resources
@@ -61,13 +64,16 @@ func main() {
 	// Construct an array of results (this is how the results are ordered in the CSV)
 	var resultData [2][]string
 
+	// Construct an object to send activity to the terminal
+	monitor := &TerminalActivityMonitor{}
+
 	// Append account ID to the result data
-	AppendResults(&resultData, "Account ID", GetAccountID(sess))
-	AppendResults(&resultData, "# of EC2 Instances", EC2Counts(sess))
-	AppendResults(&resultData, "# of Spot Instances", SpotInstances(sess))
-	AppendResults(&resultData, "# of RDS Instances", RDSInstances(sess))
-	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(sess))
-	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(sess))
+	AppendResults(&resultData, "Account ID", GetAccountID(f.GetCallerIdentityService(), monitor))
+	AppendResults(&resultData, "# of EC2 Instances", EC2Counts(f.Session))
+	AppendResults(&resultData, "# of Spot Instances", SpotInstances(f.Session))
+	AppendResults(&resultData, "# of RDS Instances", RDSInstances(f.Session))
+	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(f.Session))
+	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(f.Session))
 
 	// Blech: get a slice of the result data so that it can be used with WriteAll
 	var csvData [][]string
