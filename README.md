@@ -2,6 +2,8 @@
 
 Go utility for counting the resources in use at a cloud infrastructure provider.
 
+![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master)
+
 The cloud resource counter utility known as "cloud-resource-counter" inspects
 a cloud deployment (for now, only Amazon Web Services) to assess the number of
 distinct computing resources. The result is a CSV file that describes the counts
