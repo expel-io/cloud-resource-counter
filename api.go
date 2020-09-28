@@ -9,13 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-// CallerIdentityService blah, blah, blah...
-type CallerIdentityService struct {
+// DefaultRegion is used if the caller does not supply a region
+// on the command line or the profile does not have a default
+// region associated with is.
+const DefaultRegion = "us-east-1"
+
+// AccountIDService is a struct that knows how get the AWS
+// Account ID using an object that implements the Security
+// Token Service API interface.
+type AccountIDService struct {
 	Client stsiface.STSAPI
 }
 
-// Account does shit...
-func (cis *CallerIdentityService) Account() (string, error) {
+// Account uses the supplied AccountIDService to invoke
+// the associated GetCallerIdentity method on the struct's
+// Client object.
+func (cis *AccountIDService) Account() (string, error) {
 	// Construct the input parameter
 	input := &sts.GetCallerIdentityInput{}
 
@@ -28,28 +37,28 @@ func (cis *CallerIdentityService) Account() (string, error) {
 	return *result.Account, nil
 }
 
-// AWSServiceFactory is awesome
+// AWSServiceFactory is a struct that holds a reference to
+// an actual AWS Session object (pointer) and uses it to return
+// other specialized services, such as the AccountIDService.
 type AWSServiceFactory struct {
 	Session *session.Session
 }
 
-// Init does stuff...
+// Init initializes the AWS service factory by creating an
+// initial AWS Session object (pointer). It inspects the profiles
+// in the current user's directories and prepares the session for
+// tracing (if requested).
 func (awssf *AWSServiceFactory) Init() {
-	// Construct our session Options object
-	input := session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-		Profile:           profileName,
-	}
-
-	// Create an initial configuration
+	// Create an initial configuration object (pointer)
 	var config *aws.Config = aws.NewConfig()
 
-	// Was region specified?
+	// Was a region specified by the user?
 	if regionName != "" {
+		// Add it to the configuration
 		config = config.WithRegion(regionName)
 	}
 
-	// Was tracing specified?
+	// Was tracing specified by the user?
 	if traceFile != nil {
 		// Enable logging of AWS Calls with Body
 		config = config.WithLogLevel(aws.LogDebugWithHTTPBody)
@@ -60,24 +69,31 @@ func (awssf *AWSServiceFactory) Init() {
 		}))
 	}
 
-	// Attach the config
-	input.Config = *config
+	// Construct our session Options object
+	input := session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+		Profile:           profileName,
+		Config:            *config,
+	}
 
 	// Ensure that we have a session
+	// It is not clear how a flawed session would manifest itself in this call
+	// (as there is no error object returned). Perhaps a panic() is raised.
 	sess := session.Must(session.NewSessionWithOptions(input))
 
-	// Does this session have a region? If not, we should specify US-EAST-1 as a default
+	// Does this session have a region? If not, use the default region
 	if *sess.Config.Region == "" {
-		sess = sess.Copy(&aws.Config{Region: aws.String("us-east-1")})
+		sess = sess.Copy(&aws.Config{Region: aws.String(DefaultRegion)})
 	}
 
 	// Store the session in our struct
 	awssf.Session = sess
 }
 
-// GetCallerIdentityService ...
-func (awssf *AWSServiceFactory) GetCallerIdentityService() *CallerIdentityService {
-	return &CallerIdentityService{
+// GetAccountIDService returns an instance of an AccountIDService associated
+// with our session.
+func (awssf *AWSServiceFactory) GetAccountIDService() *AccountIDService {
+	return &AccountIDService{
 		Client: sts.New(awssf.Session),
 	}
 }

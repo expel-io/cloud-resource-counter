@@ -16,8 +16,12 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// S3Buckets does stuff...
-func S3Buckets(sess *session.Session) string {
+// S3Buckets retrieves the count of all S3 buckets.
+// TODO ... either for all regions (allRegions is true) or the
+// TODO ... region associated with the session.
+// This method gives status back to the user via the supplied
+// ActivityMonitor instance.
+func S3Buckets(sess *session.Session, am ActivityMonitor) string {
 	// Create a new instance of the S3 service using the session supplied
 	svc := s3.New(sess)
 
@@ -25,19 +29,19 @@ func S3Buckets(sess *session.Session) string {
 	input := &s3.ListBucketsInput{}
 
 	// Indicate activity
-	DisplayActivity(" * Retrieving S3 bucket counts...")
+	am.StartAction("Retrieving S3 bucket counts")
 
 	// Invoke our service
 	result, err := svc.ListBuckets(input)
 
 	// Check for error
-	InspectError(err)
+	am.CheckError(err)
 
 	// Get our count of buckets
 	count := len(result.Buckets)
 
 	// Indicate end of activity
-	DisplayActivity("OK (%d)\n", color.Bold(count))
+	am.EndAction("OK (%d)", color.Bold(count))
 
 	return strconv.Itoa(count)
 }

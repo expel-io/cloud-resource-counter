@@ -11,31 +11,44 @@ import (
 	"github.com/expel-io/cloud-resource-counter/mock"
 )
 
-type mockedGetCallerIdentity struct {
+// This type "stands in" for the real SecurityTokenService. It implements
+// the GetCallerIdentity method by allowing the caller to indicate the
+// desired GetCallerIdentityOutput struct.
+type fakeSecurityTokenService struct {
 	stsiface.STSAPI
 	Resp *sts.GetCallerIdentityOutput
 }
 
-func (m *mockedGetCallerIdentity) GetCallerIdentity(input *sts.GetCallerIdentityInput) (*sts.GetCallerIdentityOutput, error) {
+// This fake GetCallerIdentity method takes an arbitrary input and returns
+// either an error (if the supplied response object is nil) or the supplied
+// response (in the form of a GetCallerIdentityOutput pointer).
+func (m *fakeSecurityTokenService) GetCallerIdentity(input *sts.GetCallerIdentityInput) (*sts.GetCallerIdentityOutput, error) {
+	// Was the provided Response present?
 	if m.Resp != nil {
+		// Return it with no error
 		return m.Resp, nil
 	}
 
+	// Return an error
 	return nil, fmt.Errorf("Unable to generate an account ID--you don't have a valid session")
 }
 
+// This function tests two scenarios: GetCallerIdentity succeeds and fails.
 func TestGetAccountID(t *testing.T) {
-	// Create a couple of cases
+	// Fake Account ID
+	const fakeAccountID = "123abc"
+
+	// Create two test cases
 	cases := []struct {
-		Resp        *sts.GetCallerIdentityOutput
-		AccountID   string
-		ExpectError bool
+		Resp              *sts.GetCallerIdentityOutput
+		expectedAccountID string
+		ExpectError       bool
 	}{
 		{
 			&sts.GetCallerIdentityOutput{
-				Account: aws.String("123abc"),
+				Account: aws.String(fakeAccountID),
 			},
-			"123abc",
+			fakeAccountID,
 			false,
 		}, {
 			nil,
@@ -44,21 +57,22 @@ func TestGetAccountID(t *testing.T) {
 		},
 	}
 
+	// Loop through each test case
 	for _, c := range cases {
-		// Create a new services...
-		svc := &CallerIdentityService{
-			Client: &mockedGetCallerIdentity{
+		// Create a AccountIDService with a fake client
+		svc := &AccountIDService{
+			Client: &fakeSecurityTokenService{
 				Resp: c.Resp,
 			},
 		}
 
 		// Create a mock activity monitor
-		mon := &mock.MockedActivityMonitor{}
+		mon := &mock.ActivityMonitorImpl{}
 
 		// Get the account ID
-		accountID := GetAccountID(svc, mon)
+		actualAccountID := GetAccountID(svc, mon)
 
-		// Do we expect?
+		// Do we expect an error to occur?
 		if c.ExpectError {
 			// Did it fail to arrive?
 			if !mon.ErrorOccured {
@@ -66,8 +80,8 @@ func TestGetAccountID(t *testing.T) {
 			}
 		} else if mon.ErrorOccured {
 			t.Error("Did not expect an error, but it occured!")
-		} else if accountID != c.AccountID {
-			t.Errorf("Account returned '%s'; expected %s", accountID, c.AccountID)
+		} else if actualAccountID != c.expectedAccountID {
+			t.Errorf("Account returned '%s'; expected %s", actualAccountID, c.expectedAccountID)
 		}
 	}
 }

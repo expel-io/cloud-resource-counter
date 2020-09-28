@@ -1,28 +1,38 @@
 package mock
 
-// MockedActivityMonitor does stuff...
-type MockedActivityMonitor struct {
-	ErrorOccured bool
+// ActivityMonitorImpl is a mock of the ActionMonitor interface.
+// It essentially records which activity has taken place (started,
+// errored, ended).
+//
+type ActivityMonitorImpl struct {
+	ActionStarted bool
+	ErrorOccured  bool
+	ActionEnded   bool
 }
 
-// StartAction does stuff...
-func (m *MockedActivityMonitor) StartAction(format string, v ...interface{}) {
+// Message does nothing
+func (m *ActivityMonitorImpl) Message(format string, v ...interface{}) {
 
 }
 
-// CheckError does more stuff...
-func (m *MockedActivityMonitor) CheckError(err error) {
+// StartAction records that an action was started.
+func (m *ActivityMonitorImpl) StartAction(format string, v ...interface{}) {
+	m.ActionStarted = true
+}
+
+// CheckError is invoked to inspect for an error.
+func (m *ActivityMonitorImpl) CheckError(err error) {
 	if err != nil {
 		m.ErrorOccured = true
 	}
 }
 
-// ActionError also does stuff...
-func (m *MockedActivityMonitor) ActionError(format string, v ...interface{}) {
+// ActionError is what what would be called if we encounter an error.
+func (m *ActivityMonitorImpl) ActionError(format string, v ...interface{}) {
 
 }
 
-// EndAction doesn't want to miss out, so it does stuff..
-func (m *MockedActivityMonitor) EndAction(format string, v ...interface{}) {
-
+// EndAction records that an action was ended.
+func (m *ActivityMonitorImpl) EndAction(format string, v ...interface{}) {
+	m.ActionEnded = true
 }

@@ -12,8 +12,12 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// GetAccountID returns the Amazon Account ID for the supplied session.
-func GetAccountID(cis *CallerIdentityService, am ActivityMonitor) string {
+// GetAccountID returns the Amazon Account ID for the supplied session, showing activity
+// in the process and handling potential errors.
+// It relies a supplied AccountIDService struct which has a single method: Account.
+// It also relies on a supplied ActivityMonitor which it uses to inform the user of
+// what it is doing.
+func GetAccountID(cis *AccountIDService, am ActivityMonitor) string {
 	// Indicate activity
 	am.StartAction("Retrieving Account ID")
 

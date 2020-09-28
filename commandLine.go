@@ -16,7 +16,7 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-var profileName, outputFileName, regionName, traceFileName string
+var profileName, outputFileName, regionName, traceFileName, defaultProfileName string
 var traceFile, outputFile *os.File
 var allRegions bool
 
@@ -30,11 +30,10 @@ var allRegions bool
 //   --trace-file TF:  Create a trace file that contains all calls to AWS.
 //   --version:        Display version information
 //
-func ProcessCommandLine() {
+func ProcessCommandLine(am ActivityMonitor) {
 	var showVersion bool
 
 	// What is our default profile?
-	var defaultProfileName string
 	if defaultProfileName = os.Getenv("AWS_PROFILE"); defaultProfileName == "" {
 		defaultProfileName = session.DefaultSharedConfigProfile
 	}
@@ -57,25 +56,25 @@ func ProcessCommandLine() {
 
 	// Did the user just want to see the version?
 	if showVersion {
-		DisplayActivity("%s, version %s (built %s)\n", "Cloud Resource Counter", version, date)
+		am.Message("%s, version %s (built %s)\n", "Cloud Resource Counter", version, date)
 		os.Exit(0)
 	}
 
 	// Check whether a response file is being specified
 	if outputFileName != "" {
 		// Try to open the file for writing
-		outputFile = OpenFileForWriting(outputFileName, "CSV")
+		outputFile = OpenFileForWriting(outputFileName, "CSV", am)
 	}
 
 	// Check whether a trace file is being specified
 	if traceFileName != "" {
 		// Try to open the file for writing
-		traceFile = OpenFileForWriting(traceFileName, "trace")
+		traceFile = OpenFileForWriting(traceFileName, "trace", am)
 	}
 }
 
 // DisplayCommandLineSettings does stuff...
-func DisplayCommandLineSettings(resolvedRegionName string) {
+func DisplayCommandLineSettings(resolvedRegionName string, am ActivityMonitor) {
 	// What is the region being selected?
 	var displayRegionName string
 	if allRegions {
@@ -85,13 +84,13 @@ func DisplayCommandLineSettings(resolvedRegionName string) {
 	}
 
 	// Output information about utility running
-	DisplayActivity("%s (v%s) running with:\n", color.Bold("Cloud Resource Counter"), version)
-	DisplayActivity(" o %s: %s\n", color.Italic("AWS Profile"), profileName)
-	DisplayActivity(" o %s:  %s\n", color.Italic("AWS Region"), displayRegionName)
-	DisplayActivity(" o %s: %s\n", color.Italic("Output file"), outputFileName)
+	am.Message("%s (v%s) running with:\n", color.Bold("Cloud Resource Counter"), version)
+	am.Message(" o %s: %s\n", color.Italic("AWS Profile"), profileName)
+	am.Message(" o %s:  %s\n", color.Italic("AWS Region"), displayRegionName)
+	am.Message(" o %s: %s\n", color.Italic("Output file"), outputFileName)
 
 	// Are we tracing?
 	if traceFileName != "" {
-		DisplayActivity(" o %s:  %s\n", color.Italic("Trace file"), traceFileName)
+		am.Message(" o %s:  %s\n", color.Italic("Trace file"), traceFileName)
 	}
 }
