@@ -16,8 +16,12 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// RDSInstances does stuff...
-func RDSInstances(sess *session.Session) string {
+// RDSInstances retrieves the count of all RDS Instances.
+// TODO ... either for all regions (allRegions is true) or the
+// TODO ... region associated with the session.
+// This method gives status back to the user via the supplied
+// ActivityMonitor instance.
+func RDSInstances(sess *session.Session, am ActivityMonitor) string {
 	// Create a new instance of the RDS service using the session supplied
 	svc := rds.New(sess)
 
@@ -25,7 +29,7 @@ func RDSInstances(sess *session.Session) string {
 	input := &rds.DescribeDBInstancesInput{}
 
 	// Indicate activity
-	DisplayActivity(" * Retrieving RDS instance counts...")
+	am.StartAction("Retrieving RDS instance counts")
 
 	// Invoke our service
 	instanceCount := 0
@@ -36,10 +40,10 @@ func RDSInstances(sess *session.Session) string {
 	})
 
 	// Check for error
-	InspectError(err)
+	am.CheckError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
+	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }

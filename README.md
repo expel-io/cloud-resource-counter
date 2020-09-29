@@ -1,5 +1,7 @@
 # cloud-resource-counter
 
+![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master)
+
 Go utility for counting the resources in use at a cloud infrastructure provider.
 
 The cloud resource counter utility known as "cloud-resource-counter" inspects

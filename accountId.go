@@ -9,34 +9,26 @@ Summary: Retrieve account ID (assumed to be a single value) for the current
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
-
 	color "github.com/logrusorgru/aurora"
 )
 
-// GetAccountID returns the Amazon Account ID for the supplied session.
-func GetAccountID(sess *session.Session) string {
-	// Create a new instance of the Security Token Service's client with a Session.
-	svc := sts.New(sess)
-
+// GetAccountID returns the Amazon Account ID for the supplied session, showing activity
+// in the process and handling potential errors.
+// It relies a supplied AccountIDService struct which has a single method: Account.
+// It also relies on a supplied ActivityMonitor which it uses to inform the user of
+// what it is doing.
+func GetAccountID(cis *AccountIDService, am ActivityMonitor) string {
 	// Indicate activity
-	DisplayActivity(" * Retrieving Account ID...")
-
-	// Construct the input parameter
-	input := &sts.GetCallerIdentityInput{}
+	am.StartAction("Retrieving Account ID")
 
 	// Get the caller's identity
-	result, err := svc.GetCallerIdentity(input)
+	accountID, err := cis.Account()
 
 	// Check for error
-	InspectError(err)
-
-	// Get the account ID
-	accountID := *result.Account
+	am.CheckError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK (%s)\n", color.Bold(accountID))
+	am.EndAction("OK (%s)", color.Bold(accountID))
 
 	return accountID
 }

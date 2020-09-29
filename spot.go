@@ -17,8 +17,12 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// SpotInstances does stuff...
-func SpotInstances(sess *session.Session) string {
+// SpotInstances retrieves the count of all EC2 spot instances.
+// TODO ... either for all regions (allRegions is true) or the
+// TODO ... region associated with the session.
+// This method gives status back to the user via the supplied
+// ActivityMonitor instance.
+func SpotInstances(sess *session.Session, am ActivityMonitor) string {
 	// Create a new instance of the EC2 service using the session supplied
 	svc := ec2.New(sess)
 
@@ -35,7 +39,7 @@ func SpotInstances(sess *session.Session) string {
 	}
 
 	// Indicate activity
-	DisplayActivity(" * Retrieving Spot instance counts...")
+	am.StartAction("Retrieving Spot instance counts")
 
 	// Invoke our service
 	instanceCount := 0
@@ -49,10 +53,10 @@ func SpotInstances(sess *session.Session) string {
 	})
 
 	// Check for error
-	InspectError(err)
+	am.CheckError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
+	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }

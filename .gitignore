@@ -1,4 +1,5 @@
 resources.csv
+coverage.out
 cloud-resource-counter
 .vscode/
 dist/

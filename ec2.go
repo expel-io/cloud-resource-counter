@@ -17,37 +17,40 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// EC2Counts does stuff...
-func EC2Counts(sess *session.Session) string {
+// EC2Counts retrieves the count of all EC2 instances either for all
+// regions (allRegions is true) or the region associated with the
+// session. This method gives status back to the user via the supplied
+// ActivityMonitor instance.
+func EC2Counts(sess *session.Session, am ActivityMonitor) string {
 	// Indicate activity
-	DisplayActivity(" * Retrieving EC2 counts..")
+	am.StartAction("Retrieving EC2 counts")
 
 	// Should we get the counts for all regions?
 	instanceCount := 0
 	if allRegions {
 		// Get the list of all enabled regions for this account
-		regionsSlice := GetEC2Regions(sess)
+		regionsSlice := GetEC2Regions(sess, am)
 
 		// Loop through all of the regions
 		for _, regionName := range regionsSlice {
 			// Get the EC2 counts for a specific region
-			instanceCount += ec2CountForSingleRegion(sess, regionName)
+			instanceCount += ec2CountForSingleRegion(sess, regionName, am)
 		}
 	} else {
 		// Get the EC2 counts for the region selected by this session
-		instanceCount = ec2CountForSingleRegion(sess, "")
+		instanceCount = ec2CountForSingleRegion(sess, "", am)
 	}
 
 	// Indicate end of activity
-	DisplayActivity("OK (%d)\n", color.Bold(instanceCount))
+	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
 	return strconv.Itoa(instanceCount)
 }
 
 // Get the EC2 Instance count for a single region
-func ec2CountForSingleRegion(sess *session.Session, regionName string) int {
+func ec2CountForSingleRegion(sess *session.Session, regionName string, am ActivityMonitor) int {
 	// Indicate activity
-	DisplayActivity(".")
+	am.Message(".")
 
 	// Determine the session to use for this call
 	var svcSession *session.Session
@@ -81,7 +84,7 @@ func ec2CountForSingleRegion(sess *session.Session, regionName string) int {
 	})
 
 	// Check for error
-	InspectError(err)
+	am.CheckError(err)
 
 	return instanceCount
 }

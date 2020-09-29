@@ -16,8 +16,12 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// LambdaFunctions does stuff...
-func LambdaFunctions(sess *session.Session) string {
+// LambdaFunctions retrieves the count of all lambda function.
+// TODO ... either for all regions (allRegions is true) or the
+// TODO ... region associated with the session.
+// This method gives status back to the user via the supplied
+// ActivityMonitor instance.
+func LambdaFunctions(sess *session.Session, am ActivityMonitor) string {
 	// Create a new instance of the Lambda service using the session supplied
 	svc := lambda.New(sess)
 
@@ -25,7 +29,7 @@ func LambdaFunctions(sess *session.Session) string {
 	input := &lambda.ListFunctionsInput{}
 
 	// Indicate activity
-	DisplayActivity(" * Retrieving Lambda function counts...")
+	am.StartAction("Retrieving Lambda function counts")
 
 	// Invoke our service
 	functionCounts := 0
@@ -36,10 +40,10 @@ func LambdaFunctions(sess *session.Session) string {
 	})
 
 	// Check for error
-	InspectError(err)
+	am.CheckError(err)
 
 	// Indicate end of activity
-	DisplayActivity("OK (%d)\n", color.Bold(functionCounts))
+	am.EndAction("OK (%d)", color.Bold(functionCounts))
 
 	return strconv.Itoa(functionCounts)
 }
