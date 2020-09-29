@@ -53,14 +53,7 @@ func (tam *TerminalActivityMonitor) CheckError(err error) {
 		switch aerr.Code() {
 		case "NoCredentialProviders":
 			// TODO Can we establish this failure earlier? When the session is created?
-			// Construct our message based on whether a profile name was specified
-			var message string
-			if profileName != defaultProfileName {
-				message = "Either the profile name is misspelled or credentials are not stored there."
-			} else {
-				message = "Either the default profile does not exist or credentials are not stored there."
-			}
-			tam.ActionError(message)
+			tam.ActionError("Either the profile does not exist, is misspelled or credentials are not stored there.")
 			break
 		default:
 			tam.ActionError("%v", aerr)
