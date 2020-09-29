@@ -14,7 +14,7 @@ import (
 
 // DefaultRegion is used if the caller does not supply a region
 // on the command line or the profile does not have a default
-// region associated with is.
+// region associated with it.
 const DefaultRegion = "us-east-1"
 
 // AccountIDService is a struct that knows how get the AWS
@@ -52,6 +52,20 @@ type EC2InstanceService struct {
 // can determine when to stop iterating through EC2 instances.
 func (ec2i *EC2InstanceService) InspectInstances(input *ec2.DescribeInstancesInput, fn func(*ec2.DescribeInstancesOutput, bool) bool) error {
 	return ec2i.Client.DescribeInstancesPages(input, fn)
+}
+
+// GetRegions returns the list of available regions for EC2 instances based on the
+// set of input parameters.
+func (ec2i *EC2InstanceService) GetRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error) {
+	return ec2i.Client.DescribeRegions(input)
+}
+
+// ServiceFactory is the generic interface for our Cloud
+// Service provider.
+type ServiceFactory interface {
+	Init()
+	GetAccountIDService() *AccountIDService
+	GetEC2InstanceService(string) *EC2InstanceService
 }
 
 // AWSServiceFactory is a struct that holds a reference to

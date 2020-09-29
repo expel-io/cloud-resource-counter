@@ -7,7 +7,9 @@ Summary: Top-level entry point for the tool. Provides main() function.
 
 package main
 
-import "os"
+import (
+	"os"
+)
 
 // The version of this tool. This is supplied by the build process.
 var version string = "?.?.?"

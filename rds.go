@@ -8,8 +8,6 @@ Summary: Provides a count of all RDS instances.
 package main
 
 import (
-	"strconv"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
 
@@ -21,7 +19,7 @@ import (
 // TODO ... region associated with the session.
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func RDSInstances(sess *session.Session, am ActivityMonitor) string {
+func RDSInstances(sess *session.Session, am ActivityMonitor) int {
 	// Create a new instance of the RDS service using the session supplied
 	svc := rds.New(sess)
 
@@ -45,5 +43,5 @@ func RDSInstances(sess *session.Session, am ActivityMonitor) string {
 	// Indicate end of activity
 	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
-	return strconv.Itoa(instanceCount)
+	return instanceCount
 }

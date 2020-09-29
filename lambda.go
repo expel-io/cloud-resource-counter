@@ -8,8 +8,6 @@ Summary: Provides a count of all Lambda functions.
 package main
 
 import (
-	"strconv"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
@@ -21,7 +19,7 @@ import (
 // TODO ... region associated with the session.
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func LambdaFunctions(sess *session.Session, am ActivityMonitor) string {
+func LambdaFunctions(sess *session.Session, am ActivityMonitor) int {
 	// Create a new instance of the Lambda service using the session supplied
 	svc := lambda.New(sess)
 
@@ -45,5 +43,5 @@ func LambdaFunctions(sess *session.Session, am ActivityMonitor) string {
 	// Indicate end of activity
 	am.EndAction("OK (%d)", color.Bold(functionCounts))
 
-	return strconv.Itoa(functionCounts)
+	return functionCounts
 }

@@ -15,7 +15,7 @@ import (
 type ActivityMonitor interface {
 	Message(string, ...interface{})
 	StartAction(string, ...interface{})
-	CheckError(error)
+	CheckError(error) bool
 	ActionError(string, ...interface{})
 	EndAction(string, ...interface{})
 }
@@ -41,10 +41,10 @@ func (tam *TerminalActivityMonitor) StartAction(format string, v ...interface{})
 // Otherwise, it checks for specific AWS errors (returning a specific error message).
 // If no specific AWS error found, it simply sends the error message to the ActionError
 // method.
-func (tam *TerminalActivityMonitor) CheckError(err error) {
+func (tam *TerminalActivityMonitor) CheckError(err error) bool {
 	// If it is nil, get out now!
 	if err == nil {
-		return
+		return false
 	}
 
 	// Is this an AWS Error?
@@ -61,6 +61,8 @@ func (tam *TerminalActivityMonitor) CheckError(err error) {
 	} else {
 		tam.ActionError("%v", err)
 	}
+
+	return true
 }
 
 // ActionError formats the supplied format string (and associated parameters) in
