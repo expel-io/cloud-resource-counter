@@ -8,6 +8,7 @@ type ActivityMonitorImpl struct {
 	ActionStarted bool
 	ErrorOccured  bool
 	ActionEnded   bool
+	ErrorMessage  string
 }
 
 // Message does nothing
@@ -21,10 +22,15 @@ func (m *ActivityMonitorImpl) StartAction(format string, v ...interface{}) {
 }
 
 // CheckError is invoked to inspect for an error.
-func (m *ActivityMonitorImpl) CheckError(err error) {
+func (m *ActivityMonitorImpl) CheckError(err error) bool {
 	if err != nil {
 		m.ErrorOccured = true
+		m.ErrorMessage = err.Error()
+
+		return true
 	}
+
+	return false
 }
 
 // ActionError is what what would be called if we encounter an error.

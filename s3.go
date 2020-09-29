@@ -8,8 +8,6 @@ Summary: Provides a count of all S3 buckets.
 package main
 
 import (
-	"strconv"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -21,7 +19,7 @@ import (
 // TODO ... region associated with the session.
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func S3Buckets(sess *session.Session, am ActivityMonitor) string {
+func S3Buckets(sess *session.Session, am ActivityMonitor) int {
 	// Create a new instance of the S3 service using the session supplied
 	svc := s3.New(sess)
 
@@ -43,5 +41,5 @@ func S3Buckets(sess *session.Session, am ActivityMonitor) string {
 	// Indicate end of activity
 	am.EndAction("OK (%d)", color.Bold(count))
 
-	return strconv.Itoa(count)
+	return count
 }

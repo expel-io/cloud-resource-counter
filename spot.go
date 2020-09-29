@@ -8,8 +8,6 @@ Summary: Provides a count of all Spot EC2 instances.
 package main
 
 import (
-	"strconv"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -22,7 +20,7 @@ import (
 // TODO ... region associated with the session.
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func SpotInstances(sess *session.Session, am ActivityMonitor) string {
+func SpotInstances(sess *session.Session, am ActivityMonitor) int {
 	// Create a new instance of the EC2 service using the session supplied
 	svc := ec2.New(sess)
 
@@ -58,5 +56,5 @@ func SpotInstances(sess *session.Session, am ActivityMonitor) string {
 	// Indicate end of activity
 	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
-	return strconv.Itoa(instanceCount)
+	return instanceCount
 }

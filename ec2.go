@@ -8,10 +8,6 @@ Summary: Provides a count of all (non-spot) EC2 instances.
 package main
 
 import (
-	"strconv"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
 	color "github.com/logrusorgru/aurora"
@@ -21,7 +17,7 @@ import (
 // regions (allRegions is true) or the region associated with the
 // session. This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func EC2Counts(sess *session.Session, am ActivityMonitor) string {
+func EC2Counts(sf ServiceFactory, am ActivityMonitor, allRegions bool) int {
 	// Indicate activity
 	am.StartAction("Retrieving EC2 counts")
 
@@ -29,48 +25,37 @@ func EC2Counts(sess *session.Session, am ActivityMonitor) string {
 	instanceCount := 0
 	if allRegions {
 		// Get the list of all enabled regions for this account
-		regionsSlice := GetEC2Regions(sess, am)
+		regionsSlice := GetEC2Regions(sf.GetEC2InstanceService(""), am)
 
 		// Loop through all of the regions
 		for _, regionName := range regionsSlice {
 			// Get the EC2 counts for a specific region
-			instanceCount += ec2CountForSingleRegion(sess, regionName, am)
+			instanceCount += ec2CountForSingleRegion(sf.GetEC2InstanceService(regionName), am)
 		}
 	} else {
 		// Get the EC2 counts for the region selected by this session
-		instanceCount = ec2CountForSingleRegion(sess, "", am)
+		instanceCount = ec2CountForSingleRegion(sf.GetEC2InstanceService(""), am)
 	}
 
 	// Indicate end of activity
 	am.EndAction("OK (%d)", color.Bold(instanceCount))
 
-	return strconv.Itoa(instanceCount)
+	return instanceCount
 }
 
 // Get the EC2 Instance count for a single region
-func ec2CountForSingleRegion(sess *session.Session, regionName string, am ActivityMonitor) int {
+func ec2CountForSingleRegion(ec2s *EC2InstanceService, am ActivityMonitor) int {
 	// Indicate activity
 	am.Message(".")
-
-	// Determine the session to use for this call
-	var svcSession *session.Session
-	if regionName == "" {
-		svcSession = sess
-	} else {
-		svcSession = sess.Copy(&aws.Config{Region: aws.String(regionName)})
-	}
-
-	// Create a new instance of the EC2 service using the session supplied
-	svc := ec2.New(svcSession)
 
 	// Construct our input to find all EC2 instances
 	input := &ec2.DescribeInstancesInput{}
 
 	// Invoke our service
 	instanceCount := 0
-	err := svc.DescribeInstancesPages(input, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
+	err := ec2s.InspectInstances(input, func(dio *ec2.DescribeInstancesOutput, lastPage bool) bool {
 		// Loop through each reservation, instance
-		for _, reservation := range page.Reservations {
+		for _, reservation := range dio.Reservations {
 			for _, instance := range reservation.Instances {
 				// Is this a valid instance? Spot instances have an InstanceLifecycle of "spot".
 				// Similarly, Scheduled instances have an InstanceLifecycle of "scheduled".
@@ -80,7 +65,7 @@ func ec2CountForSingleRegion(sess *session.Session, regionName string, am Activi
 			}
 		}
 
-		return !lastPage
+		return true
 	})
 
 	// Check for error

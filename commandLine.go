@@ -16,11 +16,27 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-var profileName, outputFileName, regionName, traceFileName, defaultProfileName string
-var traceFile, outputFile *os.File
-var allRegions bool
+// CommandLineSettings defines the command line settings supplied by
+// the caller.
+type CommandLineSettings struct {
+	// Profile related settings
+	profileName        string
+	defaultProfileName string
 
-// ProcessCommandLine inspects the command line for valid arguments
+	// Region related settings
+	regionName string
+	allRegions bool
+
+	// Output (CSV) file
+	outputFileName string
+	outputFile     *os.File
+
+	// Trace file
+	traceFileName string
+	traceFile     *os.File
+}
+
+// Process inspects the command line for valid arguments.
 //
 // Usage of cloud-resource-counter
 //   --all-regions:    Collect counts for all regions associated with the account
@@ -30,29 +46,27 @@ var allRegions bool
 //   --trace-file TF:  Create a trace file that contains all calls to AWS.
 //   --version:        Display version information
 //
-func ProcessCommandLine(am ActivityMonitor) {
+func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 	var showVersion bool
 
 	// What is our default profile?
-	if defaultProfileName = os.Getenv("AWS_PROFILE"); defaultProfileName == "" {
-		defaultProfileName = session.DefaultSharedConfigProfile
+	if cls.defaultProfileName = os.Getenv("AWS_PROFILE"); cls.defaultProfileName == "" {
+		cls.defaultProfileName = session.DefaultSharedConfigProfile
 	}
 
 	// What is our default region
 	defaultRegionName := os.Getenv("AWS_REGION")
 
 	// Define and parse the command line arguments...
-	flag.BoolVar(&allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account.")
-	flag.StringVar(&outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a file to save the generated CSV file")
-	flag.StringVar(&profileName, "profile", defaultProfileName, "AWS Profile Name")
-	flag.StringVar(&regionName, "region", defaultRegionName, "Selects an AWS Region to use")
-	flag.StringVar(&traceFileName, "trace-file", "", "AWS Trace Log. Specify a file to record API calls being made.")
+	flag.BoolVar(&cls.allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account.")
+	flag.StringVar(&cls.outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a file to save the generated CSV file")
+	flag.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "AWS Profile Name")
+	flag.StringVar(&cls.regionName, "region", defaultRegionName, "Selects an AWS Region to use")
+	flag.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a file to record API calls being made.")
 	flag.BoolVar(&showVersion, "version", false, "Shows the version number.")
 	flag.Parse()
 
 	// TODO Check for a valid AWS Region
-
-	// TODO Check for missing required arguments. If any, show usage and quit
 
 	// Did the user just want to see the version?
 	if showVersion {
@@ -61,23 +75,23 @@ func ProcessCommandLine(am ActivityMonitor) {
 	}
 
 	// Check whether a response file is being specified
-	if outputFileName != "" {
+	if cls.outputFileName != "" {
 		// Try to open the file for writing
-		outputFile = OpenFileForWriting(outputFileName, "CSV", am)
+		cls.outputFile = OpenFileForWriting(cls.outputFileName, "CSV", am)
 	}
 
 	// Check whether a trace file is being specified
-	if traceFileName != "" {
+	if cls.traceFileName != "" {
 		// Try to open the file for writing
-		traceFile = OpenFileForWriting(traceFileName, "trace", am)
+		cls.traceFile = OpenFileForWriting(cls.traceFileName, "trace", am)
 	}
 }
 
-// DisplayCommandLineSettings does stuff...
-func DisplayCommandLineSettings(resolvedRegionName string, am ActivityMonitor) {
+// Display constructs a listing of all command line settings to the Activity Monitor
+func (cls *CommandLineSettings) Display(resolvedRegionName string, am ActivityMonitor) {
 	// What is the region being selected?
 	var displayRegionName string
-	if allRegions {
+	if cls.allRegions {
 		displayRegionName = "(All regions supported by this account)"
 	} else {
 		displayRegionName = resolvedRegionName
@@ -85,12 +99,12 @@ func DisplayCommandLineSettings(resolvedRegionName string, am ActivityMonitor) {
 
 	// Output information about utility running
 	am.Message("%s (v%s) running with:\n", color.Bold("Cloud Resource Counter"), version)
-	am.Message(" o %s: %s\n", color.Italic("AWS Profile"), profileName)
+	am.Message(" o %s: %s\n", color.Italic("AWS Profile"), cls.profileName)
 	am.Message(" o %s:  %s\n", color.Italic("AWS Region"), displayRegionName)
-	am.Message(" o %s: %s\n", color.Italic("Output file"), outputFileName)
+	am.Message(" o %s: %s\n", color.Italic("Output file"), cls.outputFileName)
 
 	// Are we tracing?
-	if traceFileName != "" {
-		am.Message(" o %s:  %s\n", color.Italic("Trace file"), traceFileName)
+	if cls.traceFileName != "" {
+		am.Message(" o %s:  %s\n", color.Italic("Trace file"), cls.traceFileName)
 	}
 }

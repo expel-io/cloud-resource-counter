@@ -79,8 +79,10 @@ func TestGetAccountID(t *testing.T) {
 				t.Error("Expected an error to occur, but it did not... :^(")
 			}
 		} else if mon.ErrorOccured {
-			t.Error("Did not expect an error, but it occured!")
+			// Did an error occur?
+			t.Errorf("Did not expect an error, but it occured: %s", mon.ErrorMessage)
 		} else if actualAccountID != c.expectedAccountID {
+			// Does the expected value NOT match the actual value?
 			t.Errorf("Account returned '%s'; expected %s", actualAccountID, c.expectedAccountID)
 		}
 	}
