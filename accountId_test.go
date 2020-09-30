@@ -80,10 +80,10 @@ func TestGetAccountID(t *testing.T) {
 			}
 		} else if mon.ErrorOccured {
 			// Did an error occur?
-			t.Errorf("Did not expect an error, but it occured: %s", mon.ErrorMessage)
+			t.Errorf("Unexpected error occurred: %s", mon.ErrorMessage)
 		} else if actualAccountID != c.expectedAccountID {
 			// Does the expected value NOT match the actual value?
-			t.Errorf("Account returned '%s'; expected %s", actualAccountID, c.expectedAccountID)
+			t.Errorf("Error: Account returned '%s'; expected %s", actualAccountID, c.expectedAccountID)
 		}
 	}
 }

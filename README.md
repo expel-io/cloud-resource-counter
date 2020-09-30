@@ -24,6 +24,7 @@ Argument         | Meaning
 --output-file OF | Write the results in Comma Separated Values format to file OF.
 --profile PN     | Use the credentials associated with shared profile PN.
 --region RN      | View resource counts for the AWS region RN.
+--all-regions*   | View resource counts for all regions supported by the account. (\* This is partially supported at this time for EC2 and Spot Instance counts.)
 --trace-file TF  | Write a trace of all AWS calls to file TF.
 --version        | Display version information and then exit.
 

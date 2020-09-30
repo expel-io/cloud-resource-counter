@@ -10,6 +10,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -67,6 +68,13 @@ func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 	flag.Parse()
 
 	// TODO Check for a valid AWS Region
+
+	// Check for conflicts between all regions and specific region
+	if cls.allRegions && cls.regionName != defaultRegionName {
+		fmt.Fprintf(os.Stderr, "Conflict: You have specified --all-regions and --region %s. Please choose only one.\n", cls.regionName)
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
 
 	// Did the user just want to see the version?
 	if showVersion {
