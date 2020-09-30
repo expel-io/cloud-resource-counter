@@ -85,3 +85,13 @@ func GetEC2Regions(ec2is *EC2InstanceService, am ActivityMonitor) []string {
 
 	return regionNames
 }
+
+// Map applies a function to each element of a string array
+// Borrowed from: https://gobyexample.com/collection-functions
+func Map(vs []string, f func(string) string) []string {
+	vsm := make([]string, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
+}

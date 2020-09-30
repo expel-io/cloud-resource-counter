@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -134,6 +136,101 @@ func (fake *fakeEC2Service) DescribeRegions(input *ec2.DescribeRegionsInput) (*e
 	return fake.DRResponse, nil
 }
 
+// Helper function that converts a filter name ("instance-lifecycle") to a field name ("InstanceLifecycle")
+func convertFilterNameToFieldName(filterName *string) string {
+	// Split the string into parts separated by dashes
+	parts := strings.Split(*filterName, "-")
+
+	// Convert each part to an Uppercase version
+	upperParts := Map(parts, strings.Title)
+
+	return strings.Join(upperParts, "")
+}
+
+// Helper function that determines whether a reflected instance satisfied a single filter
+func instanceSatisfiesFilter(reflectInstance *reflect.Value, filter *ec2.Filter) bool {
+	// Convert our filter name to a field name
+	fieldName := convertFilterNameToFieldName(filter.Name)
+
+	// Is the name missing from the instance?
+	var f reflect.Value
+	if f = reflectInstance.FieldByName(fieldName); f.IsNil() {
+		return false
+	}
+
+	// What is the value of the what the field name points to
+	fieldNameValue := reflect.ValueOf(f.Interface())
+
+	// Is the kind of value a Ptr? If not, get out now...
+	if fieldNameValue.Kind() != reflect.Ptr {
+		return false
+	}
+
+	// Dereference the pointer and get it as a string
+	fieldValue := fieldNameValue.Elem().String()
+
+	// Does this match one of the filter values?
+	for _, value := range filter.Values {
+		// Does it match?
+		if *value == fieldValue {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Helper function that determines whether an instance satifises the list of filters
+func instanceSatisifiesFilters(instance *ec2.Instance, filters []*ec2.Filter) bool {
+	// Is the input filters nil?
+	if filters == nil {
+		return true
+	}
+
+	// Perform reflection on the instance (struct)
+	reflectedInstance := reflect.ValueOf(*instance)
+
+	// Loop through the list of filters
+	for _, filter := range filters {
+		// Does the instance FAIL to satisfy the filter?
+		if !instanceSatisfiesFilter(&reflectedInstance, filter) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Helper function that applies (limited) set of filtering criteria to the response
+func applyDescribeInstancesInputFiltering(input *ec2.DescribeInstancesInput, output *ec2.DescribeInstancesOutput) *ec2.DescribeInstancesOutput {
+	// Create a new DescribeInstancesOutput struct
+	filteredOutput := &ec2.DescribeInstancesOutput{
+		Reservations: []*ec2.Reservation{},
+	}
+
+	// Loop through the reservations
+	for _, origReservation := range output.Reservations {
+		// Create a new Reservation to contain a list of filtered instances...
+		filteredReservation := &ec2.Reservation{
+			Instances: []*ec2.Instance{},
+		}
+
+		// Append it to the list of reservations...
+		filteredOutput.Reservations = append(filteredOutput.Reservations, filteredReservation)
+
+		// Loop through the instances...
+		for _, instance := range origReservation.Instances {
+			// Does the instance satisfy the filters?
+			if instanceSatisifiesFilters(instance, input.Filters) {
+				// Append the instance to the list
+				filteredReservation.Instances = append(filteredReservation.Instances, instance)
+			}
+		}
+	}
+
+	return filteredOutput
+}
+
 // Simulate the DescribeInstancePages function
 func (fake *fakeEC2Service) DescribeInstancesPages(input *ec2.DescribeInstancesInput, fn func(*ec2.DescribeInstancesOutput, bool) bool) error {
 	// If the supplied response is nil, then simulate an error
@@ -146,8 +243,11 @@ func (fake *fakeEC2Service) DescribeInstancesPages(input *ec2.DescribeInstancesI
 		// Are we looking at the last "page" of our output?
 		lastPage := index == len(fake.DIPResponse)-1
 
+		// Apply filtering to the supplied response
+		filteredOutput := applyDescribeInstancesInputFiltering(input, output)
+
 		// Invoke our fn
-		cont := fn(output, lastPage)
+		cont := fn(filteredOutput, lastPage)
 
 		// Shall we exit our loop?
 		if !cont {
@@ -199,7 +299,7 @@ func (fsf fakeServiceFactory) GetEC2InstanceService(regionName string) *EC2Insta
 // Unit Test for EC2Counts
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-func TestEC2Instances(t *testing.T) {
+func TestEC2Counts(t *testing.T) {
 	// Describe all of our test cases: 1 failure and 3 success cases
 	cases := []struct {
 		RegionName    string
@@ -249,7 +349,7 @@ func TestEC2Instances(t *testing.T) {
 			t.Errorf("Unexpected error occurred: %s", mon.ErrorMessage)
 		} else {
 			if actualCount != c.ExpectedCount {
-				t.Errorf("EC2Counts returned %d; expected %d", actualCount, c.ExpectedCount)
+				t.Errorf("Error: EC2Counts returned %d; expected %d", actualCount, c.ExpectedCount)
 			}
 		}
 	}
