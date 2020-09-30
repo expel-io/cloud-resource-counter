@@ -44,7 +44,7 @@ func EC2Counts(sf ServiceFactory, am ActivityMonitor, allRegions bool) int {
 }
 
 // Get the EC2 Instance count for a single region
-func ec2CountForSingleRegion(ec2s *EC2InstanceService, am ActivityMonitor) int {
+func ec2CountForSingleRegion(ec2is *EC2InstanceService, am ActivityMonitor) int {
 	// Indicate activity
 	am.Message(".")
 
@@ -53,7 +53,7 @@ func ec2CountForSingleRegion(ec2s *EC2InstanceService, am ActivityMonitor) int {
 
 	// Invoke our service
 	instanceCount := 0
-	err := ec2s.InspectInstances(input, func(dio *ec2.DescribeInstancesOutput, lastPage bool) bool {
+	err := ec2is.InspectInstances(input, func(dio *ec2.DescribeInstancesOutput, lastPage bool) bool {
 		// Loop through each reservation, instance
 		for _, reservation := range dio.Reservations {
 			for _, instance := range reservation.Instances {
