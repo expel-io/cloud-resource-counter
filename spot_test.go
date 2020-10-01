@@ -11,7 +11,7 @@ import (
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 func TestSpotInstances(t *testing.T) {
-	// Describe all of our test cases: 1 failure and 3 success cases
+	// Describe all of our test cases: 1 failure and 4 success cases
 	cases := []struct {
 		RegionName    string
 		AllRegions    bool
@@ -39,15 +39,15 @@ func TestSpotInstances(t *testing.T) {
 	// Loop through each test case
 	for _, c := range cases {
 		// Create our fake service factory
-		sf := fakeServiceFactory{
+		sf := fakeEC2ServiceFactory{
 			RegionName: c.RegionName,
-			DRResponse: regions,
+			DRResponse: ec2Regions,
 		}
 
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
 
-		// Invoke our EC2 Counter method
+		// Invoke our Spot Instances method
 		actualCount := SpotInstances(sf, mon, c.AllRegions)
 
 		// Did we expect an error?
