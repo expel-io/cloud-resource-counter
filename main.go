@@ -12,6 +12,9 @@ import (
 )
 
 // The version of this tool. This is supplied by the build process.
+// This is default variable used by Goreleaser's ldflags settings. If
+// we want to use a different variable, we need to change to Goreleaser
+// settings file (which is .goreleaser.yml).
 var version string = "?.?.?"
 
 // This is the build date of this tool. This is also supplied by the build process.
@@ -78,7 +81,7 @@ func main() {
 	AppendResults(&resultData, "Account ID", GetAccountID(serviceFactory.GetAccountIDService(), monitor))
 	AppendResults(&resultData, "# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
 	AppendResults(&resultData, "# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of RDS Instances", RDSInstances(serviceFactory.Session, monitor))
+	AppendResults(&resultData, "# of RDS Instances", RDSInstances(serviceFactory, serviceFactory.Session, monitor, settings.allRegions))
 	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(serviceFactory.Session, monitor))
 	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(serviceFactory.Session, monitor))
 
