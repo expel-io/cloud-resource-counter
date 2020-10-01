@@ -295,6 +295,11 @@ func (fsf fakeServiceFactory) GetEC2InstanceService(regionName string) *EC2Insta
 	}
 }
 
+// Don't need to implement
+func (fsf fakeServiceFactory) GetRDSInstanceService(string) *RDSInstanceService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for EC2Counts
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
