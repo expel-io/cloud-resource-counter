@@ -14,11 +14,12 @@ import (
 )
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Fake EC2 Region Data
+// Fake EC2 Region Data. This same data is also used for determining RDS
+// Regions
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-// This is our regions
-var regions *ec2.DescribeRegionsOutput = &ec2.DescribeRegionsOutput{
+// This is our list of accessible regions for the purpose of unit testing.
+var ec2Regions *ec2.DescribeRegionsOutput = &ec2.DescribeRegionsOutput{
 	Regions: []*ec2.Region{
 		&ec2.Region{
 			OptInStatus: aws.String("opt-in-not-required"),
@@ -40,7 +41,7 @@ var regions *ec2.DescribeRegionsOutput = &ec2.DescribeRegionsOutput{
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 // This is our map of regions and the instances in each
-var instancesPerRegion = map[string][]*ec2.DescribeInstancesOutput{
+var ec2InstancesPerRegion = map[string][]*ec2.DescribeInstancesOutput{
 	// US-EAST-1 illustrates a case where DescribeInstancesPages returns two pages of results.
 	// First page: 2 different refervations (1 instance, then 2 instances [1 is spot])
 	// Second page: 1 reservation (2 instances)
@@ -264,21 +265,21 @@ func (fake *fakeEC2Service) DescribeInstancesPages(input *ec2.DescribeInstancesI
 
 // This structure simulates the AWS Service Factory by storing some pregenerated
 // responses (that would come from AWS)
-type fakeServiceFactory struct {
+type fakeEC2ServiceFactory struct {
 	RegionName string
 	DRResponse *ec2.DescribeRegionsOutput
 }
 
 // Don't need to implement
-func (fsf fakeServiceFactory) Init() {}
+func (fsf fakeEC2ServiceFactory) Init() {}
 
 // Don't need to implement
-func (fsf fakeServiceFactory) GetAccountIDService() *AccountIDService {
+func (fsf fakeEC2ServiceFactory) GetAccountIDService() *AccountIDService {
 	return nil
 }
 
 // Implement a way to return EC2 Regions and instances found in each
-func (fsf fakeServiceFactory) GetEC2InstanceService(regionName string) *EC2InstanceService {
+func (fsf fakeEC2ServiceFactory) GetEC2InstanceService(regionName string) *EC2InstanceService {
 	// If the caller failed to specify a region, then use what is associated with our factory
 	var resolvedRegionName string
 	if regionName == "" {
@@ -289,10 +290,15 @@ func (fsf fakeServiceFactory) GetEC2InstanceService(regionName string) *EC2Insta
 
 	return &EC2InstanceService{
 		Client: &fakeEC2Service{
-			DIPResponse: instancesPerRegion[resolvedRegionName],
+			DIPResponse: ec2InstancesPerRegion[resolvedRegionName],
 			DRResponse:  fsf.DRResponse,
 		},
 	}
+}
+
+// Don't need to implement
+func (fsf fakeEC2ServiceFactory) GetRDSInstanceService(string) *RDSInstanceService {
+	return nil
 }
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -300,7 +306,7 @@ func (fsf fakeServiceFactory) GetEC2InstanceService(regionName string) *EC2Insta
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 func TestEC2Counts(t *testing.T) {
-	// Describe all of our test cases: 1 failure and 3 success cases
+	// Describe all of our test cases: 1 failure and 4 success cases
 	cases := []struct {
 		RegionName    string
 		AllRegions    bool
@@ -328,9 +334,9 @@ func TestEC2Counts(t *testing.T) {
 	// Loop through each test case
 	for _, c := range cases {
 		// Create our fake service factory
-		sf := fakeServiceFactory{
+		sf := fakeEC2ServiceFactory{
 			RegionName: c.RegionName,
-			DRResponse: regions,
+			DRResponse: ec2Regions,
 		}
 
 		// Create a mock activity monitor

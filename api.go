@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
@@ -41,8 +43,9 @@ func (aids *AccountIDService) Account() (string, error) {
 }
 
 // EC2InstanceService is a struct that knows how to get the
-// descriptions of all EC2 instances using an object that
-// implements the Elastic Compute Cloud API interface.
+// descriptions of all EC2 instances as well as accessbile
+// regions using an object that implements the Elastic
+// Compute Cloud API interface.
 type EC2InstanceService struct {
 	Client ec2iface.EC2API
 }
@@ -50,7 +53,8 @@ type EC2InstanceService struct {
 // InspectInstances takes an input filter specification (for the types of instances)
 // and a function to evaluate a DescribeInstanceOutput struct. The supplied function
 // can determine when to stop iterating through EC2 instances.
-func (ec2i *EC2InstanceService) InspectInstances(input *ec2.DescribeInstancesInput, fn func(*ec2.DescribeInstancesOutput, bool) bool) error {
+func (ec2i *EC2InstanceService) InspectInstances(input *ec2.DescribeInstancesInput,
+	fn func(*ec2.DescribeInstancesOutput, bool) bool) error {
 	return ec2i.Client.DescribeInstancesPages(input, fn)
 }
 
@@ -60,12 +64,26 @@ func (ec2i *EC2InstanceService) GetRegions(input *ec2.DescribeRegionsInput) (*ec
 	return ec2i.Client.DescribeRegions(input)
 }
 
+// RDSInstanceService is a struct that knows how to get the
+// descriptions of all RDS instances using an object that
+// implements the Relational Database Service API interface.
+type RDSInstanceService struct {
+	Client rdsiface.RDSAPI
+}
+
+// InspectInstances takes ...
+func (rdsis *RDSInstanceService) InspectInstances(input *rds.DescribeDBInstancesInput,
+	fn func(*rds.DescribeDBInstancesOutput, bool) bool) error {
+	return rdsis.Client.DescribeDBInstancesPages(input, fn)
+}
+
 // ServiceFactory is the generic interface for our Cloud
 // Service provider.
 type ServiceFactory interface {
 	Init()
 	GetAccountIDService() *AccountIDService
 	GetEC2InstanceService(string) *EC2InstanceService
+	GetRDSInstanceService(string) *RDSInstanceService
 }
 
 // AWSServiceFactory is a struct that holds a reference to
@@ -139,6 +157,7 @@ func (awssf *AWSServiceFactory) GetAccountIDService() *AccountIDService {
 // an instance associated with that region.
 func (awssf *AWSServiceFactory) GetEC2InstanceService(regionName string) *EC2InstanceService {
 	// TODO Use a map to store previously created Session associated with a given region?
+	// TODO Would it be better if this optional argument was structured as varadic?
 
 	// Construct our service client
 	var client ec2iface.EC2API
@@ -149,6 +168,26 @@ func (awssf *AWSServiceFactory) GetEC2InstanceService(regionName string) *EC2Ins
 	}
 
 	return &EC2InstanceService{
+		Client: client,
+	}
+}
+
+// GetRDSInstanceService returns an instance of an RDSInstanceService associated
+// with our session. The caller can supply an optional region name to construct
+// an instance associated with that region.
+func (awssf *AWSServiceFactory) GetRDSInstanceService(regionName string) *RDSInstanceService {
+	// TODO Use a map to store previously created Session associated with a given region?
+	// TODO Would it be better if this optional argument was structured as varadic?
+
+	// Construct our service client
+	var client rdsiface.RDSAPI
+	if regionName == "" {
+		client = rds.New(awssf.Session)
+	} else {
+		client = rds.New(awssf.Session, aws.NewConfig().WithRegion(regionName))
+	}
+
+	return &RDSInstanceService{
 		Client: client,
 	}
 }
