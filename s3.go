@@ -8,22 +8,27 @@ Summary: Provides a count of all S3 buckets.
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	color "github.com/logrusorgru/aurora"
 )
 
-// S3Buckets retrieves the count of all S3 buckets.
-// TODO ... either for all regions (allRegions is true) or the
-// TODO ... region associated with the session.
+// S3Buckets retrieves the count of all S3 buckets in ALL REGIONS.
+// This behavior is unlike other AWS Services (e.g., EC2, Spot, RDS,
+// etc).
+//
+// AS SUCH, THIS COUNT WILL BE INCORRECT WHEN A SINGLE REGION IS SPECIFIED.
+//
+// It is unclear if displaying counts of distinct regions will be part
+// of the final CLI.
+//
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func S3Buckets(sess *session.Session, am ActivityMonitor) int {
-	// Create a new instance of the S3 service using the session supplied
-	svc := s3.New(sess)
+func S3Buckets(sf ServiceFactory, am ActivityMonitor) int {
+	// Create a new instance of the S3 (abstract) service
+	svc := sf.GetS3Service()
 
-	// Construct our input to find all RDS instances
+	// Construct our input to find all S3 buckets
 	input := &s3.ListBucketsInput{}
 
 	// Indicate activity
@@ -33,7 +38,9 @@ func S3Buckets(sess *session.Session, am ActivityMonitor) int {
 	result, err := svc.ListBuckets(input)
 
 	// Check for error
-	am.CheckError(err)
+	if am.CheckError(err) {
+		return 0
+	}
 
 	// Get our count of buckets
 	count := len(result.Buckets)

@@ -124,7 +124,8 @@ func (fsf fakeRDSServiceFactory) GetEC2InstanceService(string) *EC2InstanceServi
 	}
 }
 
-// Implement an
+// Implement a way to return a RDSInstanceService which is associated with the supplied
+// region.
 func (fsf fakeRDSServiceFactory) GetRDSInstanceService(regionName string) *RDSInstanceService {
 	// If the caller failed to specify a region, then use what is associated with our factory
 	var resolvedRegionName string
@@ -139,6 +140,11 @@ func (fsf fakeRDSServiceFactory) GetRDSInstanceService(regionName string) *RDSIn
 			DDBIResponse: rdsInstancesPerRegion[resolvedRegionName],
 		},
 	}
+}
+
+// Don't need to implement
+func (fsf fakeRDSServiceFactory) GetS3Service() *S3Service {
+	return nil
 }
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

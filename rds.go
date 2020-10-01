@@ -13,11 +13,9 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
-// RDSInstances retrieves the count of all RDS Instances.
-// TODO ... either for all regions (allRegions is true) or the
-// TODO ... region associated with the session.
-// This method gives status back to the user via the supplied
-// ActivityMonitor instance.
+// RDSInstances retrieves the count of all RDS Instances either for all regions
+// (allRegions is true) or the region associated with the session. This method
+// gives status back to the user via the supplied ActivityMonitor instance.
 func RDSInstances(sf ServiceFactory, am ActivityMonitor, allRegions bool) int {
 	// Indicate activity
 	am.StartAction("Retrieving RDS instance counts")

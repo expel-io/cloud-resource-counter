@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
@@ -18,6 +20,10 @@ import (
 // on the command line or the profile does not have a default
 // region associated with it.
 const DefaultRegion = "us-east-1"
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Abstract Services (hides details of Cloud Provider API)
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 // AccountIDService is a struct that knows how get the AWS
 // Account ID using an object that implements the Security
@@ -71,19 +77,37 @@ type RDSInstanceService struct {
 	Client rdsiface.RDSAPI
 }
 
-// InspectInstances takes ...
+// InspectInstances takes an input filter specification (for the types of instances)
+// and a function to evaluate a DescribeDBInstancesOutput struct. The supplied function
+// can determine when to stop iterating through RDS instances.
 func (rdsis *RDSInstanceService) InspectInstances(input *rds.DescribeDBInstancesInput,
 	fn func(*rds.DescribeDBInstancesOutput, bool) bool) error {
 	return rdsis.Client.DescribeDBInstancesPages(input, fn)
 }
 
-// ServiceFactory is the generic interface for our Cloud
-// Service provider.
+// S3Service is a struct that knows how to get all of the S3 buckets using an object
+// that implements the Simple Storage Service API interface.
+type S3Service struct {
+	Client s3iface.S3API
+}
+
+// ListBuckets takes an input filter specification (for the types of S3 buckets) and
+// returns a ListBucketsOutput struct.
+func (s3s *S3Service) ListBuckets(input *s3.ListBucketsInput) (*s3.ListBucketsOutput, error) {
+	return s3s.Client.ListBuckets(input)
+}
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Abstract Service Factory (provides access to all Abstract Services)
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+// ServiceFactory is the generic interface for our Cloud Service provider.
 type ServiceFactory interface {
 	Init()
 	GetAccountIDService() *AccountIDService
 	GetEC2InstanceService(string) *EC2InstanceService
 	GetRDSInstanceService(string) *RDSInstanceService
+	GetS3Service() *S3Service
 }
 
 // AWSServiceFactory is a struct that holds a reference to
@@ -189,5 +213,13 @@ func (awssf *AWSServiceFactory) GetRDSInstanceService(regionName string) *RDSIns
 
 	return &RDSInstanceService{
 		Client: client,
+	}
+}
+
+// GetS3Service returns an instance of an S3Service associated with the current session.
+// There is currently no way to accept a different region name.
+func (awssf *AWSServiceFactory) GetS3Service() *S3Service {
+	return &S3Service{
+		Client: s3.New(awssf.Session),
 	}
 }

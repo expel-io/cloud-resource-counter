@@ -301,6 +301,11 @@ func (fsf fakeEC2ServiceFactory) GetRDSInstanceService(string) *RDSInstanceServi
 	return nil
 }
 
+// Don't need to implement
+func (fsf fakeEC2ServiceFactory) GetS3Service() *S3Service {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for EC2Counts
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
