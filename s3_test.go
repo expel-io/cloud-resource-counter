@@ -102,6 +102,11 @@ func (fsf fakeS3ServiceFactory) GetS3Service() *S3Service {
 	}
 }
 
+// Dom't need to implement
+func (fsf fakeS3ServiceFactory) GetLambdaService(string) *LambdaService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for S3Buckets
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -136,7 +141,7 @@ func TestS3Buckets(t *testing.T) {
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
 
-		// Invoke our S3 Buckets method
+		// Invoke our S3 Buckets function
 		actualCount := S3Buckets(sf, mon)
 
 		// Did we expect an error?

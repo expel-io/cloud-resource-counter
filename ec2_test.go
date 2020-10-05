@@ -306,6 +306,11 @@ func (fsf fakeEC2ServiceFactory) GetS3Service() *S3Service {
 	return nil
 }
 
+// Dom't need to implement
+func (fsf fakeEC2ServiceFactory) GetLambdaService(string) *LambdaService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for EC2Counts
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -347,7 +352,7 @@ func TestEC2Counts(t *testing.T) {
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
 
-		// Invoke our EC2 Counter method
+		// Invoke our EC2 Counter function
 		actualCount := EC2Counts(sf, mon, c.AllRegions)
 
 		// Did we expect an error?
