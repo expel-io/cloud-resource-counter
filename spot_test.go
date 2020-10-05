@@ -47,7 +47,7 @@ func TestSpotInstances(t *testing.T) {
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
 
-		// Invoke our Spot Instances method
+		// Invoke our Spot Instances function
 		actualCount := SpotInstances(sf, mon, c.AllRegions)
 
 		// Did we expect an error?

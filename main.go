@@ -83,15 +83,15 @@ func main() {
 	AppendResults(&resultData, "# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
 	AppendResults(&resultData, "# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
 	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(serviceFactory, monitor))
-	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(serviceFactory.Session, monitor))
-
-	// Blech: get a slice of the result data so that it can be used with WriteAll
-	var csvData [][]string
-	csvData = resultData[0:2]
+	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output
 	 * =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
+
+	// Blech: get a slice of the result data so that it can be used with WriteAll
+	var csvData [][]string
+	csvData = resultData[0:2]
 
 	// Save our results to a CSV file
 	SaveToCSV(csvData, settings.outputFile, monitor)

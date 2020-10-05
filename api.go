@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/lambda/lambdaiface"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -97,6 +99,19 @@ func (s3s *S3Service) ListBuckets(input *s3.ListBucketsInput) (*s3.ListBucketsOu
 	return s3s.Client.ListBuckets(input)
 }
 
+// LambdaService is a struct that knows how to get all of the Lambda functions using
+// an object that implements the Lambda API interface
+type LambdaService struct {
+	Client lambdaiface.LambdaAPI
+}
+
+// ListFunctions takes an input structure to identify specific lambda functions along
+// with a function which is supplied a "page" of lambda functions.
+func (ls *LambdaService) ListFunctions(input *lambda.ListFunctionsInput,
+	fn func(*lambda.ListFunctionsOutput, bool) bool) error {
+	return ls.Client.ListFunctionsPages(input, fn)
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Abstract Service Factory (provides access to all Abstract Services)
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -108,6 +123,7 @@ type ServiceFactory interface {
 	GetEC2InstanceService(string) *EC2InstanceService
 	GetRDSInstanceService(string) *RDSInstanceService
 	GetS3Service() *S3Service
+	GetLambdaService(string) *LambdaService
 }
 
 // AWSServiceFactory is a struct that holds a reference to
@@ -221,5 +237,25 @@ func (awssf *AWSServiceFactory) GetRDSInstanceService(regionName string) *RDSIns
 func (awssf *AWSServiceFactory) GetS3Service() *S3Service {
 	return &S3Service{
 		Client: s3.New(awssf.Session),
+	}
+}
+
+// GetLambdaService returns an instance of a LambdaService associated with the our session.
+// The caller can supply an optional region name to construct an instance associated with
+// that region.
+func (awssf *AWSServiceFactory) GetLambdaService(regionName string) *LambdaService {
+	// TODO Use a map to store previously created Session associated with a given region?
+	// TODO Would it be better if this optional argument was structured as varadic?
+
+	// Construct our service client
+	var client lambdaiface.LambdaAPI
+	if regionName == "" {
+		client = lambda.New(awssf.Session)
+	} else {
+		client = lambda.New(awssf.Session, aws.NewConfig().WithRegion(regionName))
+	}
+
+	return &LambdaService{
+		Client: client,
 	}
 }

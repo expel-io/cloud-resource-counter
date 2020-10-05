@@ -54,7 +54,7 @@ func rdsInstancesForSingleRegion(rdsis *RDSInstanceService, am ActivityMonitor) 
 	err := rdsis.InspectInstances(input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		instanceCount += len(page.DBInstances)
 
-		return !lastPage
+		return true
 	})
 
 	// Check for error

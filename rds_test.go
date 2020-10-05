@@ -78,7 +78,7 @@ func (fake *fakeRDSService) DescribeDBInstancesPages(input *rds.DescribeDBInstan
 		// Apply filtering to the supplied response
 		// NOTE: I have not implemented this feature as our code does not require it.
 		// To prevent unexpected cases, if the caller supplies an input other then
-		// the "zero" input, the unit test.
+		// the "zero" input, the unit test fails.
 		if input.DBInstanceIdentifier != nil || input.Filters != nil {
 			return errors.New("The unit test does not support a DescribeDBInstancesInput other than 'zero' (no parameters)")
 		}
@@ -147,12 +147,17 @@ func (fsf fakeRDSServiceFactory) GetS3Service() *S3Service {
 	return nil
 }
 
+// Dom't need to implement
+func (fsf fakeRDSServiceFactory) GetLambdaService(string) *LambdaService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for RDSInstances
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 func TestRDSInstances(t *testing.T) {
-	// Describe all of our test cases: 1 failure and 3 success cases
+	// Describe all of our test cases: 1 failure and 4 success cases
 	cases := []struct {
 		RegionName    string
 		AllRegions    bool
@@ -188,7 +193,7 @@ func TestRDSInstances(t *testing.T) {
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
 
-		// Invoke our RDS Counter method
+		// Invoke our RDS Counter function
 		actualCount := RDSInstances(sf, mon, c.AllRegions)
 
 		// Did we expect an error?
