@@ -7,11 +7,18 @@ before:
     # you may remove this if you don't need go generate
     # - go generate ./...
 builds:
-  - env:
-      - CGO_ENABLED=0
+  - binary: cloud-resource-counter
+    id: crc-others
     goos:
       - linux
+  - binary: cloud-resource-counter
+    id: crc-macos
+    goos:
       - darwin
+    goarch:
+      - amd64
+    hooks:
+      post: gon gon.hcl
 archives:
   - replacements:
       darwin: Darwin
