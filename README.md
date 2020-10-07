@@ -21,10 +21,11 @@ The following command line arguments are supported:
 
 Argument         | Meaning
 -----------------|----------------------------------
---output-file OF | Write the results in Comma Separated Values format to file OF.
---profile PN     | Use the credentials associated with shared profile PN.
---region RN      | View resource counts for the AWS region RN.
 --all-regions    | View resource counts for all regions supported by the account.
+--help           | Information on the command line options
+--output-file OF | Write the results in Comma Separated Values format to file OF.
+--profile PN     | Use the credentials associated with shared profile named PN.
+--region RN      | View resource counts for the AWS region RN.
 --trace-file TF  | Write a trace of all AWS calls to file TF.
 --version        | Display version information and then exit.
 
@@ -33,22 +34,45 @@ Argument         | Meaning
 You can build this from source or use the precompiled binaries (see the [Releases](https://github.com/expel-io/cloud-resource-counter/releases) page for binaries). We provided binaries for Linux (x86_64 and i386) and MacOS. There is no installation process as this is simply a command line tool. To unzip from the command line, use:
 
 ```Bash
-$ tar -Zxvf cloud-release-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
+$ tar -Zxvf cloud-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
 x README
 x cloud-resource-counter
 ```
 
 The result is a binary called `cloud-resource-counter` in the current directory.
 
+These binaries run on Linux OSes (32- and 64-bit versions) and MacOS (Go 1.15 requires macOS 10.12 Sierra or later).
+
 ### MacOS Download
 
-If you are using MacOS Catalina, there is a stricter process for allowing third party developers to run binaries. You must allow "App Store and identified developers" for the binary to run. Here are the detailed steps:
+If you are using MacOS Catalina, there is a stricter process for running binaries produced by third party developers. You must allow "App Store and identified developers" for the binary to run. Here are the detailed steps:
 
 1. From the Apple menu, click "System Preferences".
 1. Select "Security and Privacy"
 1. If the settings are locked, unlock them. This requires you to enter your password.
 1. From the "Allow apps downloaded from:" section, choose "App Store and identified developers".
 1. You can lock your settings if you like.
+
+## Building from Source
+
+You can also build this utility directly from source. We have built and tested this with the following Go versions:
+
+* v1.14
+* v1.15
+
+To run from source, use the following command line:
+
+```Bash
+// Assumes that you are inside the cloud-resource-counter folder
+$ go run . --help
+```
+
+To run the unit tests, use the following command line:
+
+```Bash
+// Assumes that you are inside the cloud-resource-counter folder
+$ go test . -v
+```
 
 ## Minimal IAM Policy
 
