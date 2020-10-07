@@ -15,7 +15,7 @@ import (
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Fake EC2 Region Data. This same data is also used for determining RDS
-// Regions
+// (and other service) Regions
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 // This is our list of accessible regions for the purpose of unit testing.
@@ -313,6 +313,11 @@ func (fsf fakeEC2ServiceFactory) GetLambdaService(string) *LambdaService {
 
 // Don't need to implement
 func (fsf fakeEC2ServiceFactory) GetContainerService(string) *ContainerService {
+	return nil
+}
+
+// Don't need to implement
+func (fsf fakeEC2ServiceFactory) GetLightsailService(string) *LightsailService {
 	return nil
 }
 

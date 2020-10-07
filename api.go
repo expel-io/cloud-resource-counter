@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lambda/lambdaiface"
+	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/lightsail/lightsailiface"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -134,6 +136,22 @@ func (cs *ContainerService) InspectTaskDefinition(input *ecs.DescribeTaskDefinit
 	return cs.Client.DescribeTaskDefinition(input)
 }
 
+// LightsailService is a struct that knows how to get a list of all Lightsail
+// instances and availble regions.
+type LightsailService struct {
+	Client lightsailiface.LightsailAPI
+}
+
+// GetRegions returns a list of available regions for Lightsail instances
+func (lss *LightsailService) GetRegions(input *lightsail.GetRegionsInput) (*lightsail.GetRegionsOutput, error) {
+	return lss.Client.GetRegions(input)
+}
+
+// InspectInstances returns a full description of all Lightsail instances.
+func (lss *LightsailService) InspectInstances(input *lightsail.GetInstancesInput) (*lightsail.GetInstancesOutput, error) {
+	return lss.Client.GetInstances(input)
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Abstract Service Factory (provides access to all Abstract Services)
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -147,6 +165,7 @@ type ServiceFactory interface {
 	GetS3Service() *S3Service
 	GetLambdaService(string) *LambdaService
 	GetContainerService(string) *ContainerService
+	GetLightsailService(string) *LightsailService
 }
 
 // AWSServiceFactory is a struct that holds a reference to
@@ -287,6 +306,23 @@ func (awssf *AWSServiceFactory) GetContainerService(regionName string) *Containe
 	}
 
 	return &ContainerService{
+		Client: client,
+	}
+}
+
+// GetLightsailService returns an instance of a LightsailService associated with our session.
+// The caller can supply an optional region name to construct an instance associated with
+// that region.
+func (awssf *AWSServiceFactory) GetLightsailService(regionName string) *LightsailService {
+	// Construct our service client
+	var client lightsailiface.LightsailAPI
+	if regionName == "" {
+		client = lightsail.New(awssf.Session)
+	} else {
+		client = lightsail.New(awssf.Session, aws.NewConfig().WithRegion(regionName))
+	}
+
+	return &LightsailService{
 		Client: client,
 	}
 }

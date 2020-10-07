@@ -112,6 +112,11 @@ func (fsf fakeS3ServiceFactory) GetContainerService(string) *ContainerService {
 	return nil
 }
 
+// Don't need to implement
+func (fsf fakeS3ServiceFactory) GetLightsailService(string) *LightsailService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for S3Buckets
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

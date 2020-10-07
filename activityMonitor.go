@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	color "github.com/logrusorgru/aurora"
@@ -55,6 +56,10 @@ func (tam *TerminalActivityMonitor) CheckError(err error) bool {
 			// TODO Can we establish this failure earlier? When the session is created?
 			tam.ActionError("Either the profile does not exist, is misspelled or credentials are not stored there.")
 			break
+		case "AccessDeniedException":
+			// Construct a message by taking the first part of the string up to a newline character
+			parts := strings.Split(aerr.Message(), "\n")
+			tam.ActionError(parts[0])
 		default:
 			tam.ActionError("%v", aerr)
 		}
