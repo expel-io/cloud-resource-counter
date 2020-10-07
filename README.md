@@ -67,6 +67,8 @@ To use this utility, a bare minimal IAM Profile can be associated with anotherwi
                 "ecs:DescribeTaskDefinition",
                 "ecs:ListTaskDefinitions",
                 "lambda:ListFunctions",
+                "lightsail:GetInstances",
+                "lightsail:GetRegions",
                 "rds:DescribeDBInstances"
                 "s3:ListAllMyBuckets"
             ],

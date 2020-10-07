@@ -269,7 +269,7 @@ func (fsf fakeCntrServiceFactory) GetLightsailService(string) *LightsailService 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 func TestUniqueContainerImages(t *testing.T) {
-	// Describe all of our test cases: 1 failure and 4 success cases
+	// Describe all of our test cases: 2 failures and 4 success cases
 	cases := []struct {
 		RegionName    string
 		AllRegions    bool

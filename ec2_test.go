@@ -15,7 +15,7 @@ import (
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Fake EC2 Region Data. This same data is also used for determining RDS
-// Regions
+// (and other service) Regions
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 // This is our list of accessible regions for the purpose of unit testing.
