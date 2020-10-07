@@ -64,9 +64,11 @@ To use this utility, a bare minimal IAM Profile can be associated with anotherwi
             "Action": [
                 "ec2:DescribeInstances",
                 "ec2:DescribeRegions",
+                "ecs:DescribeTaskDefinition",
+                "ecs:ListTaskDefinitions",
                 "lambda:ListFunctions",
                 "rds:DescribeDBInstances"
-                "s3:ListAllMyBuckets",
+                "s3:ListAllMyBuckets"
             ],
             "Resource": "*"
         }

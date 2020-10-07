@@ -147,8 +147,13 @@ func (fsf fakeRDSServiceFactory) GetS3Service() *S3Service {
 	return nil
 }
 
-// Dom't need to implement
+// Don't need to implement
 func (fsf fakeRDSServiceFactory) GetLambdaService(string) *LambdaService {
+	return nil
+}
+
+// Don't need to implement
+func (fsf fakeRDSServiceFactory) GetContainerService(string) *ContainerService {
 	return nil
 }
 
