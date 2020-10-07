@@ -84,6 +84,7 @@ func main() {
 	AppendResults(&resultData, "# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
 	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(serviceFactory, monitor))
 	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
+	AppendResults(&resultData, "# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output

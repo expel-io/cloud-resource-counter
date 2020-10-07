@@ -102,8 +102,13 @@ func (fsf fakeS3ServiceFactory) GetS3Service() *S3Service {
 	}
 }
 
-// Dom't need to implement
+// Don't need to implement
 func (fsf fakeS3ServiceFactory) GetLambdaService(string) *LambdaService {
+	return nil
+}
+
+// Don't need to implement
+func (fsf fakeS3ServiceFactory) GetContainerService(string) *ContainerService {
 	return nil
 }
 

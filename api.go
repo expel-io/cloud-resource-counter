@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lambda/lambdaiface"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -112,6 +114,26 @@ func (ls *LambdaService) ListFunctions(input *lambda.ListFunctionsInput,
 	return ls.Client.ListFunctionsPages(input, fn)
 }
 
+// ContainerService is a struct that knows how to get a list of all task definition
+// and get a description of each one.
+type ContainerService struct {
+	Client ecsiface.ECSAPI
+}
+
+// ListTaskDefinitions takes an input specification (ListTaskDefinitionsInput) and
+// a function that is invoked for each page of results (ListTaskDefinitionsOutput).
+// This allows a caller to obtain a list of all task definitions.
+func (cs *ContainerService) ListTaskDefinitions(input *ecs.ListTaskDefinitionsInput,
+	fn func(output *ecs.ListTaskDefinitionsOutput, lastPage bool) bool) error {
+	return cs.Client.ListTaskDefinitionsPages(input, fn)
+}
+
+// InspectTaskDefinition takes an input specification (DescribeTaskDefinitionInput)
+// that describes a single task definition and returns information about it.
+func (cs *ContainerService) InspectTaskDefinition(input *ecs.DescribeTaskDefinitionInput) (*ecs.DescribeTaskDefinitionOutput, error) {
+	return cs.Client.DescribeTaskDefinition(input)
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Abstract Service Factory (provides access to all Abstract Services)
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -124,6 +146,7 @@ type ServiceFactory interface {
 	GetRDSInstanceService(string) *RDSInstanceService
 	GetS3Service() *S3Service
 	GetLambdaService(string) *LambdaService
+	GetContainerService(string) *ContainerService
 }
 
 // AWSServiceFactory is a struct that holds a reference to
@@ -196,9 +219,6 @@ func (awssf *AWSServiceFactory) GetAccountIDService() *AccountIDService {
 // with our session. The caller can supply an optional region name to contruct
 // an instance associated with that region.
 func (awssf *AWSServiceFactory) GetEC2InstanceService(regionName string) *EC2InstanceService {
-	// TODO Use a map to store previously created Session associated with a given region?
-	// TODO Would it be better if this optional argument was structured as varadic?
-
 	// Construct our service client
 	var client ec2iface.EC2API
 	if regionName == "" {
@@ -216,9 +236,6 @@ func (awssf *AWSServiceFactory) GetEC2InstanceService(regionName string) *EC2Ins
 // with our session. The caller can supply an optional region name to construct
 // an instance associated with that region.
 func (awssf *AWSServiceFactory) GetRDSInstanceService(regionName string) *RDSInstanceService {
-	// TODO Use a map to store previously created Session associated with a given region?
-	// TODO Would it be better if this optional argument was structured as varadic?
-
 	// Construct our service client
 	var client rdsiface.RDSAPI
 	if regionName == "" {
@@ -244,9 +261,6 @@ func (awssf *AWSServiceFactory) GetS3Service() *S3Service {
 // The caller can supply an optional region name to construct an instance associated with
 // that region.
 func (awssf *AWSServiceFactory) GetLambdaService(regionName string) *LambdaService {
-	// TODO Use a map to store previously created Session associated with a given region?
-	// TODO Would it be better if this optional argument was structured as varadic?
-
 	// Construct our service client
 	var client lambdaiface.LambdaAPI
 	if regionName == "" {
@@ -256,6 +270,23 @@ func (awssf *AWSServiceFactory) GetLambdaService(regionName string) *LambdaServi
 	}
 
 	return &LambdaService{
+		Client: client,
+	}
+}
+
+// GetContainerService returns an instance of a ContainerService associated with our session.
+// The caller can supply an optional region name to construct an instance associated with
+// that region.
+func (awssf *AWSServiceFactory) GetContainerService(regionName string) *ContainerService {
+	// Construct our service client
+	var client ecsiface.ECSAPI
+	if regionName == "" {
+		client = ecs.New(awssf.Session)
+	} else {
+		client = ecs.New(awssf.Session, aws.NewConfig().WithRegion(regionName))
+	}
+
+	return &ContainerService{
 		Client: client,
 	}
 }

@@ -165,6 +165,11 @@ func (fsf fakeLambdaServiceFactory) GetLambdaService(regionName string) *LambdaS
 	}
 }
 
+// Don't need to implement
+func (fsf fakeLambdaServiceFactory) GetContainerService(string) *ContainerService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for LambdaFunctions
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
