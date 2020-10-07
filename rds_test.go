@@ -157,6 +157,11 @@ func (fsf fakeRDSServiceFactory) GetContainerService(string) *ContainerService {
 	return nil
 }
 
+// Don't need to implement
+func (fsf fakeRDSServiceFactory) GetLightsailService(string) *LightsailService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for RDSInstances
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

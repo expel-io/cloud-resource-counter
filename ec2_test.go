@@ -316,6 +316,11 @@ func (fsf fakeEC2ServiceFactory) GetContainerService(string) *ContainerService {
 	return nil
 }
 
+// Don't need to implement
+func (fsf fakeEC2ServiceFactory) GetLightsailService(string) *LightsailService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for EC2Counts
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

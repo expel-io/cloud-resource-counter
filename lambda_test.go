@@ -170,6 +170,11 @@ func (fsf fakeLambdaServiceFactory) GetContainerService(string) *ContainerServic
 	return nil
 }
 
+// Don't need to implement
+func (fsf fakeLambdaServiceFactory) GetLightsailService(string) *LightsailService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for LambdaFunctions
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

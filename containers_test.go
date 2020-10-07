@@ -259,6 +259,11 @@ func (fsf fakeCntrServiceFactory) GetContainerService(regionName string) *Contai
 	}
 }
 
+// Don't need to implement
+func (fsf fakeCntrServiceFactory) GetLightsailService(string) *LightsailService {
+	return nil
+}
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Unit Test for UniqueContainerImages
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
