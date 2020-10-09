@@ -4,7 +4,7 @@ bundle_id = "com.expel.cloud-resource-counter"
 apple_id { }
 
 sign {
-	application_identity = "34A9AF032F4967131A552BAA92FC2E2E3556AA84"
+	application_identity = "56bab15156129308a6ecb290dc759bab3abe9666"
 }
 
 zip {
