@@ -51,6 +51,8 @@ func main() {
 	if settings.traceFile != nil {
 		defer settings.traceFile.Close()
 	}
+	// Remember to close the output file
+	defer settings.outputFile.Close()
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Establish a valid AWS Session via our AWS Service Factory
@@ -74,29 +76,30 @@ func main() {
 	// Show activity
 	monitor.Message("\nActivity\n")
 
-	// Construct an array of results (this is how the results are ordered in the CSV)
-	var resultData [2][]string
+	// Construct a new results data structure
+	results := Results{
+		StoreHeaders: !settings.appendToOutput,
+		Writer:       settings.outputFile,
+	}
+	results.Init()
 
-	// Append account ID to the result data
-	AppendResults(&resultData, "Account ID", GetAccountID(serviceFactory.GetAccountIDService(), monitor))
-	AppendResults(&resultData, "# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of S3 Buckets", S3Buckets(serviceFactory, monitor))
-	AppendResults(&resultData, "# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
-	AppendResults(&resultData, "# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
+	// Create a new row of data
+	results.NewRow()
+	results.Append("Account ID", GetAccountID(serviceFactory.GetAccountIDService(), monitor))
+	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
+	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output
 	 * =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-	// Blech: get a slice of the result data so that it can be used with WriteAll
-	var csvData [][]string
-	csvData = resultData[0:2]
-
 	// Save our results to a CSV file
-	SaveToCSV(csvData, settings.outputFile, monitor)
+	results.Save(monitor)
 
 	// Indicate success
 	monitor.Message("\nSuccess.\n")

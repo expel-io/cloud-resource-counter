@@ -31,6 +31,7 @@ type CommandLineSettings struct {
 	// Output (CSV) file
 	outputFileName string
 	outputFile     *os.File
+	appendToOutput bool
 
 	// Trace file
 	traceFileName string
@@ -41,6 +42,7 @@ type CommandLineSettings struct {
 //
 // Usage of cloud-resource-counter
 //   --all-regions:    Collect counts for all regions associated with the account
+//   --append:         Whether to append to an existing output file or not
 //   --output-file OF: Write the results to file OF
 //   --profile PN:     Use the credentials associated with shared profile PN
 //   --region RN:      View resource counts for the AWS region RN
@@ -59,11 +61,12 @@ func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 	defaultRegionName := os.Getenv("AWS_REGION")
 
 	// Define and parse the command line arguments...
-	flag.BoolVar(&cls.allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account.")
-	flag.StringVar(&cls.outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a file to save the generated CSV file")
-	flag.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "AWS Profile Name")
-	flag.StringVar(&cls.regionName, "region", defaultRegionName, "Selects an AWS Region to use")
-	flag.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a file to record API calls being made.")
+	flag.BoolVar(&cls.allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account. (default false--Do not iterate over all regions)")
+	flag.BoolVar(&cls.appendToOutput, "append", false, "Whether to append to an existing output file or not. (default false--replace previous contents)")
+	flag.StringVar(&cls.outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a `file` to save the generated CSV file.")
+	flag.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "The name of the AWS Profile to use.")
+	flag.StringVar(&cls.regionName, "region", defaultRegionName, "The name of the AWS Region to use.")
+	flag.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a `file` to record API calls being made.")
 	flag.BoolVar(&showVersion, "version", false, "Shows the version number.")
 	flag.Parse()
 
@@ -85,13 +88,13 @@ func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 	// Check whether a response file is being specified
 	if cls.outputFileName != "" {
 		// Try to open the file for writing
-		cls.outputFile = OpenFileForWriting(cls.outputFileName, "CSV", am)
+		cls.outputFile = OpenFileForWriting(cls.outputFileName, "CSV", am, cls.appendToOutput)
 	}
 
 	// Check whether a trace file is being specified
 	if cls.traceFileName != "" {
 		// Try to open the file for writing
-		cls.traceFile = OpenFileForWriting(cls.traceFileName, "trace", am)
+		cls.traceFile = OpenFileForWriting(cls.traceFileName, "trace", am, false)
 	}
 }
 
