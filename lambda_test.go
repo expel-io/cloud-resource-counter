@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: lambda_test.go
+
+Summary: The Unit Test for lambda.
+******************************************************************************/
+
 package main
 
 import (

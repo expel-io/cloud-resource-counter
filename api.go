@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: api.go
+
+Summary: ServiceFactory, abstract services and the AWS Service Factory implementation.
+******************************************************************************/
+
 package main
 
 import (

@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: activityMonitor.go
+
+Summary: The ActivityMonitor interface along with a Terminal-based monitor.
+******************************************************************************/
+
 package main
 
 import (

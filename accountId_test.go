@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: accountId_test.go
+
+Summary: Unit test for accountId
+******************************************************************************/
+
 package main
 
 import (

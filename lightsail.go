@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: lightsail.go
+
+Summary: Counts the number of Lightsail instances.
+******************************************************************************/
+
 package main
 
 import (

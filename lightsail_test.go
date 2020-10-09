@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: lightsail_test.go
+
+Summary: The Unit Test for lightsail.
+******************************************************************************/
+
 package main
 
 import (

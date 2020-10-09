@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: mock.go
+
+Summary: Mocks of common interfaces
+******************************************************************************/
+
 package mock
 
 // ActivityMonitorImpl is a mock of the ActionMonitor interface.

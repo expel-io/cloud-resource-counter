@@ -1,3 +1,10 @@
+/******************************************************************************
+Cloud Resource Counter
+File: containers.go
+
+Summary: Counts the number of unique container images.
+******************************************************************************/
+
 package main
 
 import (
