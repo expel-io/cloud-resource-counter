@@ -22,6 +22,7 @@ The following command line arguments are supported:
 Argument         | Meaning
 -----------------|----------------------------------
 --all-regions    | View resource counts for all regions supported by the account.
+--append         | Append (rather than overwrite) the output file.
 --help           | Information on the command line options
 --output-file OF | Write the results in Comma Separated Values format to file OF.
 --profile PN     | Use the credentials associated with shared profile named PN.
