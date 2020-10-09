@@ -8,45 +8,24 @@ Summary: Various utility functions
 package main
 
 import (
-	"encoding/csv"
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-// AppendResults is used to grow our results data structure
-func AppendResults(results *[2][]string, colName string, colValue interface{}) {
-	results[0] = append(results[0], colName)
-	results[1] = append(results[1], fmt.Sprintf("%v", colValue))
-}
-
-// SaveToCSV saves the data structure to a CSV file
-func SaveToCSV(csvData [][]string, file *os.File, am ActivityMonitor) {
-	// Indicate activity
-	am.StartAction("Writing to file")
-
-	// Remember to close the file...
-	defer file.Close()
-
-	// Get the CSV Writer
-	writer := csv.NewWriter(file)
-
-	// Write all of the contents at once
-	err := writer.WriteAll(csvData)
-
-	// Check for Error
-	am.CheckError(err)
-
-	// Indicate success
-	am.EndAction("OK")
-}
-
 // OpenFileForWriting does stuff...
-func OpenFileForWriting(fileName string, typeOfFile string, am ActivityMonitor) *os.File {
+func OpenFileForWriting(fileName string, typeOfFile string, am ActivityMonitor, append bool) *os.File {
+	// What is our flag for the file?
+	var flag int
+	if append {
+		flag = os.O_WRONLY | os.O_APPEND
+	} else {
+		flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	}
+
 	// Can we open it for writing?
-	file, err := os.Create(fileName)
+	file, err := os.OpenFile(fileName, flag, 0666)
 
 	// Check for error
 	am.CheckError(err)
