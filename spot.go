@@ -48,7 +48,7 @@ func spotInstancesForSingleRegion(ec2is *EC2InstanceService, am ActivityMonitor)
 	// Indicate activity
 	am.Message(".")
 
-	// Construct our input to find all EC2 instances
+	// Construct our input to find ONLY SPOT instances
 	input := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
 			{

@@ -57,6 +57,9 @@ func (tam *TerminalActivityMonitor) CheckError(err error) bool {
 
 	// Is this an AWS Error?
 	if aerr, ok := err.(awserr.Error); ok {
+		// Split the message by newline
+		parts := strings.Split(aerr.Message(), "\n")
+
 		// Switch on the error code for known error conditions...
 		switch aerr.Code() {
 		case "NoCredentialProviders":
@@ -65,10 +68,12 @@ func (tam *TerminalActivityMonitor) CheckError(err error) bool {
 			break
 		case "AccessDeniedException":
 			// Construct a message by taking the first part of the string up to a newline character
-			parts := strings.Split(aerr.Message(), "\n")
 			tam.ActionError(parts[0])
+		case "InvalidClientTokenId":
+			// Construct a message that indicates an unsupported region
+			tam.ActionError("The region is not supported for this account.")
 		default:
-			tam.ActionError("%v", aerr)
+			tam.ActionError("%s: %s", aerr.Code(), parts[0])
 		}
 	} else {
 		tam.ActionError("%v", err)

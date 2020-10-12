@@ -83,6 +83,14 @@ func (ec2i *EC2InstanceService) GetRegions(input *ec2.DescribeRegionsInput) (*ec
 	return ec2i.Client.DescribeRegions(input)
 }
 
+// InspectVolumes takes an input filter specification (for the types of volumes)
+// and a function to evalatuate a DescribeVolumesOutput struct. The supplied function
+// can determine when to stop iterating through EBS volumes.
+func (ec2i *EC2InstanceService) InspectVolumes(input *ec2.DescribeVolumesInput,
+	fn func(*ec2.DescribeVolumesOutput, bool) bool) error {
+	return ec2i.Client.DescribeVolumesPages(input, fn)
+}
+
 // RDSInstanceService is a struct that knows how to get the
 // descriptions of all RDS instances using an object that
 // implements the Relational Database Service API interface.
@@ -166,6 +174,7 @@ func (lss *LightsailService) InspectInstances(input *lightsail.GetInstancesInput
 // ServiceFactory is the generic interface for our Cloud Service provider.
 type ServiceFactory interface {
 	Init()
+	GetCurrentRegion() string
 	GetAccountIDService() *AccountIDService
 	GetEC2InstanceService(string) *EC2InstanceService
 	GetRDSInstanceService(string) *RDSInstanceService
@@ -231,6 +240,11 @@ func (awssf *AWSServiceFactory) Init() {
 
 	// Store the session in our struct
 	awssf.Session = sess
+}
+
+// GetCurrentRegion returns the name of the current region.
+func (awssf *AWSServiceFactory) GetCurrentRegion() string {
+	return *awssf.Session.Config.Region
 }
 
 // GetAccountIDService returns an instance of an AccountIDService associated

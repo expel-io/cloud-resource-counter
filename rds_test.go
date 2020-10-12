@@ -77,18 +77,18 @@ func (fake *fakeRDSService) DescribeDBInstancesPages(input *rds.DescribeDBInstan
 		return errors.New("DescribeDBInstancesPages encountered an unexpected error: 1234")
 	}
 
+	// Apply filtering to the supplied response
+	// NOTE: I have not implemented this feature as our code does not require it.
+	// To prevent unexpected cases, if the caller supplies an input other then
+	// the "zero" input, the unit test fails.
+	if input.DBInstanceIdentifier != nil || input.Filters != nil {
+		return errors.New("The unit test does not support a DescribeDBInstancesInput other than 'zero' (no parameters)")
+	}
+
 	// Loop through the slice of responses, invoking the supplied function
 	for index, output := range fake.DDBIResponse {
 		// Are we looking at the last "page" of our output?
 		lastPage := index == len(fake.DDBIResponse)-1
-
-		// Apply filtering to the supplied response
-		// NOTE: I have not implemented this feature as our code does not require it.
-		// To prevent unexpected cases, if the caller supplies an input other then
-		// the "zero" input, the unit test fails.
-		if input.DBInstanceIdentifier != nil || input.Filters != nil {
-			return errors.New("The unit test does not support a DescribeDBInstancesInput other than 'zero' (no parameters)")
-		}
 
 		// Invoke our fn
 		cont := fn(output, lastPage)
@@ -115,6 +115,11 @@ type fakeRDSServiceFactory struct {
 
 // Don't need to implement
 func (fsf fakeRDSServiceFactory) Init() {}
+
+// Return our current region
+func (fsf fakeRDSServiceFactory) GetCurrentRegion() string {
+	return fsf.RegionName
+}
 
 // Don't need to implement
 func (fsf fakeRDSServiceFactory) GetAccountIDService() *AccountIDService {

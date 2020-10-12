@@ -77,7 +77,7 @@ $ go test . -v
 
 ## Minimal IAM Policy
 
-To use this utility, a bare minimal IAM Profile can be associated with anotherwise bare user account:
+To use this utility, this minimal IAM Profile can be associated with a bare user account:
 
 ```JSON
 {
@@ -89,6 +89,7 @@ To use this utility, a bare minimal IAM Profile can be associated with anotherwi
             "Action": [
                 "ec2:DescribeInstances",
                 "ec2:DescribeRegions",
+                "ec2:DescribeVolumes",
                 "ecs:DescribeTaskDefinition",
                 "ecs:ListTaskDefinitions",
                 "lambda:ListFunctions",

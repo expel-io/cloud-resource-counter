@@ -85,6 +85,11 @@ type fakeS3ServiceFactory struct {
 // Don't need to implement
 func (fsf fakeS3ServiceFactory) Init() {}
 
+// Don't implement
+func (fsf fakeS3ServiceFactory) GetCurrentRegion() string {
+	return ""
+}
+
 // Don't need to implement
 func (fsf fakeS3ServiceFactory) GetAccountIDService() *AccountIDService {
 	return nil
