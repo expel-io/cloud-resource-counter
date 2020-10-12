@@ -218,6 +218,11 @@ type fakeCntrServiceFactory struct {
 // Don't need to implement
 func (fsf fakeCntrServiceFactory) Init() {}
 
+// Return our current region
+func (fsf fakeCntrServiceFactory) GetCurrentRegion() string {
+	return fsf.RegionName
+}
+
 // Don't need to implement
 func (fsf fakeCntrServiceFactory) GetAccountIDService() *AccountIDService {
 	return nil

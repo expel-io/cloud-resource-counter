@@ -93,6 +93,7 @@ func main() {
 	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.allRegions))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output

@@ -91,18 +91,18 @@ func (fake *fakeLambdaService) ListFunctionsPages(input *lambda.ListFunctionsInp
 		return errors.New("ListFunctionsPages encountered an unexpected error: 1234")
 	}
 
+	// Apply filtering to the supplied response
+	// NOTE: I have not implemented this feature as our code does not require it.
+	// To prevent unexpected cases, if the caller supplies an input other then
+	// the "zero" input, the unit test fails.
+	if input.FunctionVersion != nil || input.Marker != nil || input.MasterRegion != nil || input.MaxItems != nil {
+		return errors.New("The unit test does not support a ListFunctionsInput other than 'zero' (no parameters)")
+	}
+
 	// Loop through the slice of responses, invoking the supplied function
 	for index, output := range fake.LFOResponse {
 		// Are we looking at the last "page" of our output?
 		lastPage := index == len(fake.LFOResponse)-1
-
-		// Apply filtering to the supplied response
-		// NOTE: I have not implemented this feature as our code does not require it.
-		// To prevent unexpected cases, if the caller supplies an input other then
-		// the "zero" input, the unit test fails.
-		if input.FunctionVersion != nil || input.Marker != nil || input.MasterRegion != nil || input.MaxItems != nil {
-			return errors.New("The unit test does not support a ListFunctionsInput other than 'zero' (no parameters)")
-		}
 
 		// Invoke our fn
 		cont := fn(output, lastPage)
@@ -129,6 +129,11 @@ type fakeLambdaServiceFactory struct {
 
 // Don't need to implement
 func (fsf fakeLambdaServiceFactory) Init() {}
+
+// Return our current region
+func (fsf fakeLambdaServiceFactory) GetCurrentRegion() string {
+	return fsf.RegionName
+}
 
 // Don't need to implement
 func (fsf fakeLambdaServiceFactory) GetAccountIDService() *AccountIDService {

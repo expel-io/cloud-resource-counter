@@ -52,6 +52,7 @@ var lightsailInstancesPerRegion = map[string]*lightsail.GetInstancesOutput{
 	},
 	// US-EAST-2 has no instances...
 	"us-east-2": &lightsail.GetInstancesOutput{},
+
 	// EU-WEST-1 has 1 instance
 	"eu-west-1": &lightsail.GetInstancesOutput{
 		Instances: []*lightsail.Instance{
@@ -101,6 +102,11 @@ func (fake *fakeLightsailService) GetInstances(input *lightsail.GetInstancesInpu
 type fakeLightsailServiceFactory struct {
 	RegionName string
 	GRResponse *lightsail.GetRegionsOutput
+}
+
+// Return our current region
+func (fsf fakeLightsailServiceFactory) GetCurrentRegion() string {
+	return fsf.RegionName
 }
 
 // Don't need to implement
@@ -163,23 +169,29 @@ func TestLightsailInstances(t *testing.T) {
 	cases := []struct {
 		RegionName    string
 		AllRegions    bool
+		GRResponse    *lightsail.GetRegionsOutput
 		ExpectedCount int
 		ExpectError   bool
 	}{
 		{
 			RegionName:    "us-east-1",
+			GRResponse:    lightsailRegions,
 			ExpectedCount: 2,
 		}, {
 			RegionName:    "us-east-2",
+			GRResponse:    lightsailRegions,
 			ExpectedCount: 0,
 		}, {
 			RegionName:    "eu-west-1",
+			GRResponse:    lightsailRegions,
 			ExpectedCount: 1,
 		}, {
-			RegionName:  "undefined-region",
-			ExpectError: true,
+			RegionName:    "undefined-region",
+			GRResponse:    lightsailRegions,
+			ExpectedCount: 0,
 		}, {
 			AllRegions:    true,
+			GRResponse:    lightsailRegions,
 			ExpectedCount: 3,
 		}, {
 			AllRegions:  true,
@@ -189,16 +201,10 @@ func TestLightsailInstances(t *testing.T) {
 
 	// Loop through each test case
 	for _, c := range cases {
-		// Are we expecting allRegions to fail?
-		grResponse := lightsailRegions
-		if c.AllRegions && c.ExpectError {
-			grResponse = nil
-		}
-
 		// Create our fake service factory
 		sf := fakeLightsailServiceFactory{
 			RegionName: c.RegionName,
-			GRResponse: grResponse,
+			GRResponse: c.GRResponse,
 		}
 
 		// Create a mock activity monitor
