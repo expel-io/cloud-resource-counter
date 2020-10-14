@@ -12,9 +12,6 @@ of each.
 This command requires access to a valid AWS Account. For now, it is assumed that
 this is stored in the user's `.aws` folder (located in `$HOME/.aws`).
 
-A future version of this will allow the caller to supply credentials in more
-flexible ways.
-
 ## Command Line
 
 The following command line arguments are supported:
@@ -121,13 +118,13 @@ The `cloud-resource-counter` examines the following resources:
 
 3. **EBS Volumes.** We count the number of "attached" EBS volumes across all regions.
 
-   * We only count those EBS volumes that are "attached" to an EC2 instance. 
+   * We only count those EBS volumes that are "attached" to an EC2 instance.
 
    * This is stored in the generated CSV file under the "# of EBS Volumes" column.
 
 4. **Unique ECS Containers.** We count the number of "unique" ECS containers across all regions.
 
-   * We look at all task definitions and collect all of the `Image` name fields inside the Container Definitions. 
+   * We look at all task definitions and collect all of the `Image` name fields inside the Container Definitions.
    * We then simply count the number of unique `Image` names _across all regions._ This is the only resource counted this way.
    * This is stored in the generated CSV file under the "# of Unique Containers" column.
 
@@ -157,48 +154,71 @@ If you do not wish to use the `cloud-resource-counter` utility, you can use the 
 
 ==For the purposes of explaining these scripts, we are using a Bash command line on a Unix operating system. If you use another command line processor (or OS), please adapt the script appropriately.==
 
-It is also assumed that you have configured the AWS CLI for your desired profile. ==For our purposes, we will assume that correct profile is called `my-profile`.==
+### Setup
+
+To make these scripts easier to read, we will put your profile in a shell variable.
+
+```bash
+$ aws_p='--profile my-profile'
+```
+
+In the example above, we have specified "my-profile" as the name of the AWS profile we want to use. Replace this with the name of your profile.
+
+Execute the line above in your shell for the remaining scripts to work correctly.
 
 ### Account ID
 
 To collect the account ID, use the AWS CLI `sts` command, as in:
 
 ```bash
-$ aws sts get-caller-identity --profile my-profile --output text --query Account
+$ aws sts get-caller-identity $aws_p --output text --query Account
 123456789012
 ```
 
 ### EC2 Instances
 
-#### EC2 Regions
+#### Regions
 
 To collect the total number of EC2 instances across all regions, we will need to run two AWS CLI commands. First, let's get the list of accessible regions where your EC2 instances are located:
 
 ```bash
-$ aws ec2 describe-regions --profile my-profile --filters "Name=opt-in-status,Values=opt-in-not-required,opted-in" \
-		--output text --query Regions[].RegionName
+$ aws ec2 describe-regions $aws_p --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
+      --region us-east-1 --output text --query Regions[].RegionName
 eu-north-1    ap-south-1    eu-west-3 ...
 ```
 
-It filters the list of regions to just those that are either "opted in" or where "opt in" is not required.
+Notes on the command:
 
-We output the query as text and just extract the `RegionName` field from the JSON structure. 
+1. It filters the list of regions to just those that are either "opted in" or where "opt in" is not required.
+1. We send this command to the US-EAST-1 region. (This is required since your profile may not specify a region.)
+1. We output the query as TEXT.
+1. We extract the `RegionName` field from the structure.
 
-(If your profile does not have a default region, then you should `--region us-east-1` to the above command line. You need to direct this request to a valid region.)
+We will be using the results of this command to "iterate" over all regions. To make our scripts easier to read, we are going to store the results of this command to a shell variable.
 
-We will be using the results of this command to "iterate" over all regions.
+```bash
+$ ec2_r=$(aws ec2 describe-regions $aws_p --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
+      --region us-east-1 --output text --query Regions[].RegionName )
+```
 
-#### EC2 Instances
+You can show the list of regions for your account by using the `echo` command:
+
+```bash
+$ echo $ec2_r
+eu-north-1 ap-south-1 eu-west-3 ...
+```
+
+#### Instances
 
 Here is the command to count the number of _normal_ EC2 instances (those that are _not_ Spot nor Scheduled instances) for a given region:
 
 ```bash
-$ aws ec2 describe-instances --profile my-profile --region us-east-1 \
-		--query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])'
+$ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])'
 4
 ```
 
-The number 4 above means that there were 4 EC2 instances found.
+The number 4 above means that there were 4 EC2 instances found. (Your results may vary.)
 
 By default, the EC2 `describe-instances` "normal" EC2 instances as well as those that are "spot" instances. As such, the query argument does the following:
 
@@ -207,20 +227,23 @@ By default, the EC2 `describe-instances` "normal" EC2 instances as well as those
      * This is effectively saying, where `InstanceLifecycle` is null.
      * The language specification (JMESPath) does not have a `null()` function.
    * Get the `InstanceId` for each of these matching Instances and form into a flattened array.
-2. Get the length of that array.
+1. Get the length of that array.
 
 We will need to run this command over all regions. Here is what it looks like:
 
 ```bash
-$ for reg in $(aws ec2 describe-regions --profile my-profile --filters "Name=opt-in-status,Values=opt-in-not-required,opted-in" \
-	--output text --query Regions[].RegionName); do \
-		aws ec2 describe-instances --profile my-profile --region $reg \
-				--filters "length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])" \
+$ for reg in $ec2_r; do \
+      aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+         --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])' ; \
   done | paste -s -d+ - | bc
  23
 ```
 
-The first two lines allow us to loop over all regions (using the variable `reg` to hold the current value).
+(This command may take 1-2 minutes, so be patient.)
 
-We then paste all of the values into a long addition and use `bc` to sum the values.
+The first line loops over all regions (using the variable `reg` to hold the current value).
+
+The second and third lines are our call to `describe-instances` (as shown above).
+
+In the fourth line, we paste all of the values into a long addition and use `bc` to sum the values.
 
