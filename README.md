@@ -152,7 +152,9 @@ The `cloud-resource-counter` examines the following resources:
 
 If you do not wish to use the `cloud-resource-counter` utility, you can use the AWS CLI to collect these same counts. For some of these counts, it will be easy to do. For others, the command line is a bit more complex.
 
-==For the purposes of explaining these scripts, we are using a Bash command line on a Unix operating system. If you use another command line processor (or OS), please adapt the script appropriately.==
+If you do not have the AWS CLI (version 2) installed, see [Installing the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) on the AWS website.
+
+For the purposes of explaining these scripts, we are using a Bash command line on a Unix operating system. If you use another command line processor (or OS), please adapt the script appropriately.
 
 ### Setup
 
@@ -175,15 +177,16 @@ $ aws sts get-caller-identity $aws_p --output text --query Account
 123456789012
 ```
 
-### EC2 Instances
+### EC2 and Spot Instances
 
 #### Regions
 
 To collect the total number of EC2 instances across all regions, we will need to run two AWS CLI commands. First, let's get the list of accessible regions where your EC2 instances are located:
 
 ```bash
-$ aws ec2 describe-regions $aws_p --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
-      --region us-east-1 --output text --query Regions[].RegionName
+$ aws ec2 describe-regions $aws_p \
+   --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
+   --region us-east-1 --output text --query Regions[].RegionName
 eu-north-1    ap-south-1    eu-west-3 ...
 ```
 
@@ -197,8 +200,9 @@ Notes on the command:
 We will be using the results of this command to "iterate" over all regions. To make our scripts easier to read, we are going to store the results of this command to a shell variable.
 
 ```bash
-$ ec2_r=$(aws ec2 describe-regions $aws_p --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
-      --region us-east-1 --output text --query Regions[].RegionName )
+$ ec2_r=$(aws ec2 describe-regions $aws_p \
+   --filters Name=opt-in-status,Values=opt-in-not-required,opted-in \
+   --region us-east-1 --output text --query Regions[].RegionName )
 ```
 
 You can show the list of regions for your account by using the `echo` command:
@@ -208,7 +212,7 @@ $ echo $ec2_r
 eu-north-1 ap-south-1 eu-west-3 ...
 ```
 
-#### Instances
+#### Normal Instances
 
 Here is the command to count the number of _normal_ EC2 instances (those that are _not_ Spot nor Scheduled instances) for a given region:
 
@@ -247,3 +251,64 @@ The second and third lines are our call to `describe-instances` (as shown above)
 
 In the fourth line, we paste all of the values into a long addition and use `bc` to sum the values.
 
+#### Spot Instances
+
+Here is the command to count the number of _Spot_ instances for a given region:
+
+```bash
+$ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])'
+1
+```
+
+This command is similar to the normal EC2 query, but now explicitly checks for EC2 instances whose `InstanceLifecycle` is `spot`.
+
+We will need to run this command over all regions. Here is what it looks like:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+      --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])' ; \
+done | paste -s -d+ - | bc
+5
+```
+
+### EBS Volumes
+
+Here is the command to count all EBS Volumes in a given region:
+
+```bash
+$ aws ec2 describe-volumes $aws_p --no-paginate --region us-east-1 \
+   --query 'length(Volumes[].Attachments[?not_null(InstanceId)].InstanceId[])'
+3
+```
+
+To run this over all regions, use this command:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws ec2 describe-volumes $aws_p --no-paginate --region $reg \
+      --query 'length(Volumes[].Attachments[?not_null(InstanceId)].InstanceId[])' ; \
+done | paste -s -d+ - | bc
+11
+```
+
+### RDS Volumes
+
+Here is the command to count all RDS Volumes in a given region:
+
+```bash
+$ aws rds describe-db-instances $aws_p --no-paginate --region us-east-1 \
+   --query 'length(DBInstances)'
+3
+```
+
+To run this over all regions, use this command:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws rds describe-db-instances $aws_p --no-paginate --region $reg \
+      --query 'length(DBInstances)' ; \
+done | paste -s -d+ - | bc
+9
+```
