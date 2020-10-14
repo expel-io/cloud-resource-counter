@@ -369,3 +369,21 @@ $ for reg in $ec2_r; do \
 11
 ```
 
+### Lambda Functions
+
+To get a list of lambda functions in a given region, use the AWS CLI `lambda` command, as in:
+
+```bash
+$ aws lambda list-functions $aws_p --no-paginate --region us-east-1 \
+   --query 'length(Functions)'
+4
+```
+
+To get the list of lambda functions across all regions, use this command:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws lambda list-functions $aws_p --no-paginate --region $reg \
+      --query 'length(Functions)' ; \
+done | paste -s -d+ - | bc
+```
