@@ -109,41 +109,41 @@ The `cloud-resource-counter` examines the following resources:
 
    * This is stored in the generated CSV file under the "Account ID" column.
 
-2. **EC2**. We count the number of EC2 instances (both "normal" and Spot instances) across all regions.
+1. **EC2**. We count the number of EC2 instances (both "normal" and Spot instances) across all regions.
 
    * For EC2 instances, we only count those _without_ an Instance Lifecycle tag (which is either `spot` or `scheduled`).
    * For Spot instance, we only count those with an Instance Lifecycle tag of `spot`.
 
    * This is stored in the generated CSV file under the "# of EC2 Instances" and "# of Spot Instances" columns.
 
-3. **EBS Volumes.** We count the number of "attached" EBS volumes across all regions.
+1. **EBS Volumes.** We count the number of "attached" EBS volumes across all regions.
 
    * We only count those EBS volumes that are "attached" to an EC2 instance.
 
    * This is stored in the generated CSV file under the "# of EBS Volumes" column.
 
-4. **Unique ECS Containers.** We count the number of "unique" ECS containers across all regions.
+1. **Unique ECS Containers.** We count the number of "unique" ECS containers across all regions.
 
    * We look at all task definitions and collect all of the `Image` name fields inside the Container Definitions.
    * We then simply count the number of unique `Image` names _across all regions._ This is the only resource counted this way.
    * This is stored in the generated CSV file under the "# of Unique Containers" column.
 
-5. **Lambda Functions.** We count the number of all Lambda functions across all regions.
+1. **Lambda Functions.** We count the number of all Lambda functions across all regions.
 
    * We do not qualify the type of Lambda function.
    * This is stored in the generated CSV file under the "# of Lambda Functions" column.
 
-6. **Lightsail Instances.** We count the number of Lightsail instances across all regions.
-
-   * We do not qualify the type of Lightsail instance.
-   * This is stored in the generated CSV file under the "# of Lightsail Instances" column.
-
-7. **RDS Instances.** We count the number of RDS instance across all regions.
+1. **RDS Instances.** We count the number of RDS instance across all regions.
 
    * We do not qualify the type of RDS instance.
    * This is stored in the generated CSV file under the "# of RDS Instances" column.
 
-8. **S3 Buckets.** We count the number of S3 buckets across all regions.
+1. **Lightsail Instances.** We count the number of Lightsail instances across all regions.
+
+   * We do not qualify the type of Lightsail instance.
+   * This is stored in the generated CSV file under the "# of Lightsail Instances" column.
+
+1. **S3 Buckets.** We count the number of S3 buckets across all regions.
 
    * We do not qualify the type of S3 bucket.
    * This is stored in the generated CSV file under the "# of S3 Buckets" column.
@@ -295,26 +295,6 @@ done | paste -s -d+ - | bc
 11
 ```
 
-### RDS Volumes
-
-Here is the command to count all RDS Volumes in a given region:
-
-```bash
-$ aws rds describe-db-instances $aws_p --no-paginate --region us-east-1 \
-   --query 'length(DBInstances)'
-3
-```
-
-To run this over all regions, use this command:
-
-```bash
-$ for reg in $ec2_r; do \
-   aws rds describe-db-instances $aws_p --no-paginate --region $reg \
-      --query 'length(DBInstances)' ; \
-done | paste -s -d+ - | bc
-9
-```
-
 ### Unique ECS Containers
 
 To compute the number of unique ECS container images, we must invoke two AWS CLI commands: `list-task-definitions` and `describe-task-definition`. The first command gives us a list of "Task Definition ARNs". Then for each task definition ARN, we can get a description of that task. Let's look at each part.
@@ -386,4 +366,63 @@ $ for reg in $ec2_r; do \
    aws lambda list-functions $aws_p --no-paginate --region $reg \
       --query 'length(Functions)' ; \
 done | paste -s -d+ - | bc
+7
+```
+
+### RDS Instances
+
+To get a list of RDS instances in a given region, we use the AWS CLI `rds` command, as in:
+
+```bash
+$ aws rds describe-db-instances $aws_p --no-paginate --region us-east-1 \
+   --query 'length(DBInstances)'
+1
+```
+
+To get a list of all RDS instances across all regions use:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws rds describe-db-instances $aws_p --no-paginate --region $reg \
+      --query 'length(DBInstances)' ; \
+done | paste -s -d+ - | bc
+5
+```
+
+### Lightsail Instances
+
+Lightsail instances live in different regions than EC2 instances, as such, we need a new way to collect all of the Lightsail regions:
+
+```bash
+$ aws lightsail get-regions $aws_p --region us-east-1 --output text \
+   --query "regions[].name"
+us-east-1    us-east-2    us-west-2 ...
+```
+
+As you can see, this is the correct form of the AWS Region that we want to use.
+
+Here's how we get the number of Lightsail instances in a given region:
+
+```bash
+$ aws lightsail get-instances $aws_p --region us-east-1 --query 'length(instances)'
+2
+```
+
+Here is how we put the two calls together to find all instances across all regions:
+
+```bash
+$ for reg in $(aws lightsail get-regions $aws_p --region us-east-1 --output text \
+   --query 'regions[].name'); do \
+   aws lightsail get-instances $aws_p --region $reg --query 'length(instances)';
+done | paste -s -d+ - | bc
+3
+```
+
+### S3 Buckets
+
+The last count is probably the easiest. To get a list of all S3 buckets in all regions, you need only one command:
+
+```bash
+$ aws s3 list-buckets $aws_p --query 'length(Buckets)'
+10
 ```

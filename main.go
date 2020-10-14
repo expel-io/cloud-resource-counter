@@ -89,11 +89,11 @@ func main() {
 	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
-	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output
