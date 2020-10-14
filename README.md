@@ -283,6 +283,8 @@ $ aws ec2 describe-volumes $aws_p --no-paginate --region us-east-1 \
 3
 ```
 
+It restricts the count to just those EBS volumes that are attached to an EC2 instance. Unattached EBS volumes are not counted.
+
 To run this over all regions, use this command:
 
 ```bash
@@ -312,3 +314,58 @@ $ for reg in $ec2_r; do \
 done | paste -s -d+ - | bc
 9
 ```
+
+### Unique ECS Containers
+
+To compute the number of unique ECS container images, we must invoke two AWS CLI commands: `list-task-definitions` and `describe-task-definition`. The first command gives us a list of "Task Definition ARNs". Then for each task definition ARN, we can get a description of that task. Let's look at each part.
+
+#### List Task Definitions
+
+Here is how we get a list of task definitions in a single region:
+
+```bash
+$ aws ecs list-task-definitions $aws_p --no-paginate --region us-east-1 \
+   --output text --query taskDefinitionArns[]
+arn:aws:ecs:us-east-1:123456789012:task-definition/some-task-family:1
+arn:aws:ecs:us-east-1:123456789012:task-definition/another-task-family:1
+```
+
+You can collect all task definitions for all regions using:
+
+```bash
+$ for reg in $ec2_r; do \
+   aws ecs list-task-definitions $aws_p --no-paginate --region $reg \
+      --output text --query taskDefinitionArns[]; done
+arn:aws:ecs:us-east-1:123456789012:task-definition/some-task-family:1
+arn:aws:ecs:us-east-1:123456789012:task-definition/another-task-family:1
+arn:aws:ecs:us-east-2:123456789012:task-definition/my-family:1
+arn:aws:ecs:us-west-1:123456789012:task-definition/last-family:3
+```
+
+This list cannot give us a unique count of container images, but we can use this to get the definition for each.
+
+#### Describe Task Definition
+
+Once we have a task definition ARN, we can ask for its definition. Here's how we do that for a single task in a single region:
+
+```bash
+$ aws ecs describe-task-definition $aws_p --region us-east-1 \
+   --task-definition arn:aws:ecs:us-east-1:123456789012:task-definition/some-task-family:1 \
+   --output text --query taskDefinition.containerDefinitions[].image
+tomcat
+https://github.com/docker-library/mongo:4.0
+```
+
+To combine this with a list of all task definition ARNs and regions, use the following command:
+
+```bash
+$ for reg in $ec2_r; do \
+   for td in $(aws ecs list-task-definitions $aws_p --no-paginate --region $reg \
+      --output text --query taskDefinitionArns[]); do \
+      aws ecs describe-task-definition $aws_p --region $reg \
+         --task-definition $td --output text \
+         --query taskDefinition.containerDefinitions[].image; \
+   done; done | sort | uniq | wc -l
+11
+```
+
