@@ -39,7 +39,6 @@ type CommandLineSettings struct {
 // Process inspects the command line for valid arguments.
 //
 // Usage of cloud-resource-counter
-//   --all-regions:    Collect counts for all regions associated with the account
 //   --append:         Whether to append to an existing output file or not
 //   --output-file OF: Write the results to file OF
 //   --profile PN:     Use the credentials associated with shared profile PN
