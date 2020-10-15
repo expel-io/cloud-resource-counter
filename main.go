@@ -30,8 +30,6 @@ var date string = "<<never built>>"
 // This command requires access to a valid AWS Account. For now, it is assumed that
 // this is stored in the user's ".aws" folder (located in $HOME/.aws).
 //
-// A future version may allow the caller to supply credentials in more flexible ways.
-//
 func main() {
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Command line processing
@@ -66,8 +64,8 @@ func main() {
 	}
 	serviceFactory.Init()
 
-	// Show command line settings (passing in the resolved region)
-	settings.Display(*serviceFactory.Session.Config.Region, monitor)
+	// Show command line settings
+	settings.Display(monitor)
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Collect counts of all resources
@@ -86,13 +84,13 @@ func main() {
 	// Create a new row of data
 	results.NewRow()
 	results.Append("Account ID", GetAccountID(serviceFactory.GetAccountIDService(), monitor))
-	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.regionName == ""))
 	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

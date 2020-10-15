@@ -10,7 +10,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -26,7 +25,6 @@ type CommandLineSettings struct {
 
 	// Region related settings
 	regionName string
-	allRegions bool
 
 	// Output (CSV) file
 	outputFileName string
@@ -41,7 +39,6 @@ type CommandLineSettings struct {
 // Process inspects the command line for valid arguments.
 //
 // Usage of cloud-resource-counter
-//   --all-regions:    Collect counts for all regions associated with the account
 //   --append:         Whether to append to an existing output file or not
 //   --output-file OF: Write the results to file OF
 //   --profile PN:     Use the credentials associated with shared profile PN
@@ -57,26 +54,21 @@ func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 		cls.defaultProfileName = session.DefaultSharedConfigProfile
 	}
 
-	// What is our default region
-	defaultRegionName := os.Getenv("AWS_REGION")
-
 	// Define and parse the command line arguments...
-	flag.BoolVar(&cls.allRegions, "all-regions", false, "Whether to iterate over all regions associated with the account. (default false--Do not iterate over all regions)")
 	flag.BoolVar(&cls.appendToOutput, "append", false, "Whether to append to an existing output file or not. (default false--replace previous contents)")
 	flag.StringVar(&cls.outputFileName, "output-file", "./resources.csv", "CSV Output File. Specify a path to a `file` to save the generated CSV file.")
 	flag.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "The name of the AWS Profile to use.")
-	flag.StringVar(&cls.regionName, "region", defaultRegionName, "The name of the AWS Region to use.")
+	flag.StringVar(&cls.regionName, "region", "", "The name of the AWS Region to use. If omitted, then all regions will be examined. This is the default behavior")
 	flag.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a `file` to record API calls being made.")
 	flag.BoolVar(&showVersion, "version", false, "Shows the version number.")
 	flag.Parse()
 
-	// TODO Check for a valid AWS Region
-
-	// Check for conflicts between all regions and specific region
-	if cls.allRegions && cls.regionName != defaultRegionName {
-		fmt.Fprintf(os.Stderr, "Conflict: You have specified --all-regions and --region %s. Please choose only one.\n", cls.regionName)
-		flag.PrintDefaults()
-		os.Exit(1)
+	// Check for a valid AWS Region
+	if cls.regionName != "" {
+		// If not valid region name, then get out now...
+		if !IsValidRegionName(cls.regionName) {
+			am.ActionError("Error: '%s' is not a valid AWS Region name.", cls.regionName)
+		}
 	}
 
 	// Did the user just want to see the version?
@@ -99,13 +91,13 @@ func (cls *CommandLineSettings) Process(am ActivityMonitor) {
 }
 
 // Display constructs a listing of all command line settings to the Activity Monitor
-func (cls *CommandLineSettings) Display(resolvedRegionName string, am ActivityMonitor) {
+func (cls *CommandLineSettings) Display(am ActivityMonitor) {
 	// What is the region being selected?
 	var displayRegionName string
-	if cls.allRegions {
+	if cls.regionName == "" {
 		displayRegionName = "(All regions supported by this account)"
 	} else {
-		displayRegionName = resolvedRegionName
+		displayRegionName = cls.regionName
 	}
 
 	// Output information about utility running
