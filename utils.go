@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
@@ -63,6 +64,22 @@ func GetEC2Regions(ec2is *EC2InstanceService, am ActivityMonitor) []string {
 	}
 
 	return regionNames
+}
+
+// IsValidRegionName returns whether the supplied region name is valid or not.
+func IsValidRegionName(regionName string) bool {
+	// Get the AWS Partition
+	awsPartition := endpoints.AwsPartition()
+
+	// Loop through the region names...
+	for id := range awsPartition.Regions() {
+		// Does it match?
+		if id == regionName {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Map applies a function to each element of a string array
