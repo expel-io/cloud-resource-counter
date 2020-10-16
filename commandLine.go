@@ -60,7 +60,7 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 
 	// Define and parse the command line arguments...
 	flagSet.BoolVar(&cls.appendToOutput, "append", false, "Whether to append to an existing output file or not. (default false--replace previous contents)")
-	flagSet.StringVar(&cls.outputFileName, "output-file", "resources.csv", "CSV Output File. Specify a path to a `file` to save the generated CSV file. To not have any data written to a file, specify an empty string as the value \"\".")
+	flagSet.StringVar(&cls.outputFileName, "output-file", "resources.csv", "CSV Output File. Specify a path to a `file` to save the generated CSV file. To have *no* data written to a file, specify an empty string as the value \"\".")
 	flagSet.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "The name of the AWS Profile to use.")
 	flagSet.StringVar(&cls.regionName, "region", "", "The name of the AWS Region to use. If omitted, then all regions will be examined. This is the default behavior.")
 	flagSet.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a `file` to record API calls being made.")
