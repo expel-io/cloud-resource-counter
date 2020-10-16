@@ -91,7 +91,7 @@ To use this utility, this minimal IAM Profile can be associated with a bare user
                 "lambda:ListFunctions",
                 "lightsail:GetInstances",
                 "lightsail:GetRegions",
-                "rds:DescribeDBInstances"
+                "rds:DescribeDBInstances",
                 "s3:ListAllMyBuckets"
             ],
             "Resource": "*"
@@ -422,6 +422,6 @@ done | paste -s -d+ - | bc
 The last count is probably the easiest. To get a list of all S3 buckets in all regions, you need only one command:
 
 ```bash
-$ aws s3 list-buckets $aws_p --query 'length(Buckets)'
+$ aws s3api list-buckets $aws_p --query 'length(Buckets)'
 10
 ```
