@@ -50,8 +50,8 @@ func (r *Results) Append(columnName string, rowValue interface{}) {
 // Save the generated results to the supplied file
 func (r *Results) Save(am ActivityMonitor) {
 	// If we don't have a Writer, then get out now...
-	if r.Writer == nil {
-		panic("Caller did not supply a valid Writer")
+	if NilInterface(r.Writer) {
+		return
 	}
 
 	// Indicate activity

@@ -91,6 +91,8 @@ func TestGetAccountID(t *testing.T) {
 		} else if actualAccountID != c.expectedAccountID {
 			// Does the expected value NOT match the actual value?
 			t.Errorf("Error: Account returned '%s'; expected %s", actualAccountID, c.expectedAccountID)
+		} else if mon.ProgramExited {
+			t.Errorf("Unexpected Exit: The program unexpected exited with status code=%d", mon.ExitCode)
 		}
 	}
 }

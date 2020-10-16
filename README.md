@@ -68,7 +68,7 @@ To run the unit tests, use the following command line:
 
 ```bash
 // Assumes that you are inside the cloud-resource-counter folder
-$ go test . -v
+$ go test
 ```
 
 ## Minimal IAM Policy

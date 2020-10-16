@@ -385,10 +385,10 @@ func TestEC2Counts(t *testing.T) {
 			}
 		} else if mon.ErrorOccured {
 			t.Errorf("Unexpected error occurred: %s", mon.ErrorMessage)
-		} else {
-			if actualCount != c.ExpectedCount {
-				t.Errorf("Error: EC2Counts returned %d; expected %d", actualCount, c.ExpectedCount)
-			}
+		} else if actualCount != c.ExpectedCount {
+			t.Errorf("Error: EC2Counts returned %d; expected %d", actualCount, c.ExpectedCount)
+		} else if mon.ProgramExited {
+			t.Errorf("Unexpected Exit: The program unexpected exited with status code=%d", mon.ExitCode)
 		}
 	}
 }

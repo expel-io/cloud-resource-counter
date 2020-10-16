@@ -39,18 +39,13 @@ func main() {
 	// the Terminal (Standard Error).
 	monitor := &TerminalActivityMonitor{
 		Writer: os.Stderr,
+		ExitFn: os.Exit,
 	}
 
 	// Process all command line arguments
 	settings := &CommandLineSettings{}
-	settings.Process(monitor)
-
-	// If we are writing to a trace file, remember to close it
-	if settings.traceFile != nil {
-		defer settings.traceFile.Close()
-	}
-	// Remember to close the output file
-	defer settings.outputFile.Close()
+	cleanupFn := settings.Process(os.Args[1:], monitor)
+	defer cleanupFn()
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Establish a valid AWS Session via our AWS Service Factory
@@ -60,7 +55,7 @@ func main() {
 	serviceFactory := &AWSServiceFactory{
 		ProfileName: settings.profileName,
 		RegionName:  settings.regionName,
-		TraceFile:   settings.traceFile,
+		TraceWriter: settings.traceFile,
 	}
 	serviceFactory.Init()
 
