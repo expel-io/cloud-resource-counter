@@ -81,14 +81,14 @@ func TestResultsAppend(t *testing.T) {
 	results.Append("col4", 789)
 
 	// Create our mock activity monitor
-	mockAM := mock.ActivityMonitorImpl{}
+	mon := mock.ActivityMonitorImpl{}
 
 	// Save to our mock Writer
-	results.Save(&mockAM)
+	results.Save(&mon)
 
 	// Verify that no errors were encountered
-	if mockAM.ErrorOccured {
-		t.Errorf("Encountered an error during Results.Save: %s", mockAM.ErrorMessage)
+	if mon.ErrorOccured {
+		t.Errorf("Encountered an error during Results.Save: %s", mon.ErrorMessage)
 	}
 
 	// Read the generate results back into our CSV module...
@@ -141,5 +141,31 @@ func TestResultsAppend(t *testing.T) {
 	// Did we look at all of the expected rows?
 	if row != len(expected) {
 		t.Errorf("We have fewer stored rows than expected")
+	} else if mon.ProgramExited {
+		t.Errorf("Unexpected Exit: The program unexpected exited with status code=%d", mon.ExitCode)
+	}
+}
+
+func TestResultsNoSave(t *testing.T) {
+	// Create an instance of Results
+	results := Results{}
+	results.Init()
+	results.NewRow()
+
+	// Add a bunch of column names and row values...
+	results.Append("col1", "row1_col1")
+	results.Append("col2", 123)
+	results.Append("col3", 456)
+	results.Append("col4", 789)
+
+	// Create our mock activity monitor
+	mon := mock.ActivityMonitorImpl{}
+
+	// Save to our mock Writer
+	results.Save(&mon)
+
+	// Verify that no errors were encountered
+	if mon.ErrorOccured {
+		t.Errorf("Encountered an error during Results.Save: %s", mon.ErrorMessage)
 	}
 }

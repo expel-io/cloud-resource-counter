@@ -10,7 +10,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -26,12 +25,14 @@ type ActivityMonitor interface {
 	CheckError(error) bool
 	ActionError(string, ...interface{})
 	EndAction(string, ...interface{})
+	Exit(int)
 }
 
 // TerminalActivityMonitor is our terminal-based activity monitor. It allows
 // the caller to supply an io.Writer to direct output to.
 type TerminalActivityMonitor struct {
 	io.Writer
+	ExitFn func(int)
 }
 
 // Message constructs a simple message from the format string and arguments
@@ -85,14 +86,23 @@ func (tam *TerminalActivityMonitor) CheckError(err error) bool {
 // ActionError formats the supplied format string (and associated parameters) in
 // RED and exits the tool.
 func (tam *TerminalActivityMonitor) ActionError(format string, v ...interface{}) {
+	// Display an error message (and newline)
 	fmt.Fprintln(tam.Writer, color.Red(fmt.Sprintf(format, v...)))
 	fmt.Fprintln(tam.Writer)
 
-	os.Exit(1)
+	// Exit the program
+	tam.Exit(1)
 }
 
 // EndAction receives a format string (and arguments) and sends to the supplied
 // Writer.
 func (tam *TerminalActivityMonitor) EndAction(format string, v ...interface{}) {
 	fmt.Fprintln(tam.Writer, fmt.Sprintf(format, v...))
+}
+
+// Exit causes the application to exit
+func (tam *TerminalActivityMonitor) Exit(resultCode int) {
+	if tam.ExitFn != nil {
+		tam.ExitFn(resultCode)
+	}
 }

@@ -9,7 +9,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -193,7 +193,7 @@ type AWSServiceFactory struct {
 	Session     *session.Session
 	ProfileName string
 	RegionName  string
-	TraceFile   *os.File
+	TraceWriter io.Writer
 }
 
 // Init initializes the AWS service factory by creating an
@@ -202,7 +202,7 @@ type AWSServiceFactory struct {
 // tracing (if requested).
 func (awssf *AWSServiceFactory) Init() {
 	// Create an initial configuration object (pointer)
-	var config *aws.Config = aws.NewConfig()
+	config := &aws.Config{}
 
 	// Was a region specified by the user?
 	if awssf.RegionName != "" {
@@ -211,27 +211,25 @@ func (awssf *AWSServiceFactory) Init() {
 	}
 
 	// Was tracing specified by the user?
-	if awssf.TraceFile != nil {
+	if awssf.TraceWriter != nil {
 		// Enable logging of AWS Calls with Body
 		config = config.WithLogLevel(aws.LogDebugWithHTTPBody)
 
 		// Enable a logger function which writes to the Trace file
 		config = config.WithLogger(aws.LoggerFunc(func(args ...interface{}) {
-			fmt.Fprintln(awssf.TraceFile, args...)
+			fmt.Fprintln(awssf.TraceWriter, args...)
 		}))
 	}
 
 	// Construct our session Options object
-	input := session.Options{
+	options := session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 		Profile:           awssf.ProfileName,
 		Config:            *config,
 	}
 
 	// Ensure that we have a session
-	// It is not clear how a flawed session would manifest itself in this call
-	// (as there is no error object returned). Perhaps a panic() is raised.
-	sess := session.Must(session.NewSessionWithOptions(input))
+	sess := session.Must(session.NewSessionWithOptions(options))
 
 	// Does this session have a region? If not, use the default region
 	if *sess.Config.Region == "" {

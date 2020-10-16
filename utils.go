@@ -9,6 +9,7 @@ package main
 
 import (
 	"os"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -90,4 +91,9 @@ func Map(vs []string, f func(string) string) []string {
 		vsm[i] = f(v)
 	}
 	return vsm
+}
+
+// NilInterface checks whether the supplied interface is nil or not
+func NilInterface(intf interface{}) bool {
+	return intf == nil || reflect.ValueOf(intf).IsNil()
 }
