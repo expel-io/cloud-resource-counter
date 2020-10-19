@@ -18,13 +18,15 @@ The following command line arguments are supported:
 
 Argument         | Meaning
 -----------------|----------------------------------
---append         | Append (rather than overwrite) the output file.
 --help           | Information on the command line options
---output-file OF | Write the results in Comma Separated Values format to file OF.
+--output-file OF | Write the results in Comma Separated Values format to file OF. Defaults to 'resources.csv'.
+--no-output      | Do not save the results to any file.
 --profile PN     | Use the credentials associated with shared profile named PN.
 --region RN      | Collect resource counts for a single AWS region RN. If omitted, all regions are examined.
 --trace-file TF  | Write a trace of all AWS calls to file TF.
 --version        | Display version information and then exit.
+
+When run repeatedly, results are automatically **appended** to the existing file. If you wish to not save the results of a run to _any_ file, use `--no-output`.
 
 ## Installing
 
@@ -80,7 +82,7 @@ To use this utility, this minimal IAM Profile can be associated with a bare user
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "VisualEditor0",
+            "Sid": "Cloud Resource Counter Permissions",
             "Effect": "Allow",
             "Action": [
                 "ec2:DescribeInstances",

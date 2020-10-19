@@ -14,23 +14,43 @@ func TestCommandLineProcess(t *testing.T) {
 
 	// Construct our test cases...
 	cases := []struct {
-		Args        []string
-		ExpectError bool
-		ExpectExit  bool
-		FileCreated bool
+		Args             []string
+		ExpectError      bool
+		ExpectExit       bool
+		ExpectAppend     bool
+		ExpectAllRegions bool
 	}{
 		{
-			Args:        []string{"--region", "us-west-2", "--output-file", tempFile, "--append"},
-			FileCreated: true,
+			Args:             []string{"--output-file", tempFile},
+			ExpectAllRegions: true,
+		},
+		{
+			Args:         []string{"--region", "us-west-2", "--output-file", tempFile},
+			ExpectAppend: true,
+		},
+		{
+			Args:             []string{"--output-file", tempFile, "--no-output"},
+			ExpectError:      true,
+			ExpectAllRegions: true,
 		},
 		{
 			Args:        []string{"--region", "abc-def"},
 			ExpectError: true,
 		},
 		{
-			Args:       []string{"--version"},
-			ExpectExit: true,
+			Args:             []string{"--version"},
+			ExpectExit:       true,
+			ExpectAllRegions: true,
 		},
+	}
+
+	// Does the file exist?
+	if FileExists(tempFile) {
+		// Remove the file
+		err := os.Remove(tempFile)
+		if err != nil {
+			t.Errorf("Unexpected error while trying to delete temporary file: %v", err)
+		}
 	}
 
 	// Loop through the cases...
@@ -40,12 +60,6 @@ func TestCommandLineProcess(t *testing.T) {
 
 		// Create a mock activity monitor
 		mon := &mock.ActivityMonitorImpl{}
-
-		// Are we expecting to have a file created? And append to it?
-		if c.FileCreated {
-			// Create our output file
-			os.Create(tempFile)
-		}
 
 		// Invoke the Process method
 		cleanupFn := settings.Process(c.Args, mon)
@@ -63,15 +77,19 @@ func TestCommandLineProcess(t *testing.T) {
 			t.Errorf("Unexpected error occurred: %s", mon.ErrorMessage)
 		} else if mon.ProgramExited && !c.ExpectExit {
 			t.Errorf("Unexpected Exit: The program unexpected exited with status code=%d", mon.ExitCode)
+		} else if c.ExpectAppend != settings.appendToOutput {
+			t.Errorf("Unexpected Append: expected %v, actual: %v", c.ExpectAppend, settings.appendToOutput)
+		} else if c.ExpectAllRegions != settings.allRegions {
+			t.Errorf("Unexpected AllRegions: expected %v, actual: %v", c.ExpectAllRegions, settings.allRegions)
 		}
+	}
 
-		// Did we expect a file to be created?
-		if c.FileCreated {
-			// Remove the file
-			err := os.Remove(tempFile)
-			if err != nil {
-				t.Errorf("Unexpected error while trying to delete temporary file: %v", err)
-			}
+	// Does the file exist?
+	if FileExists(tempFile) {
+		// Remove the file
+		err := os.Remove(tempFile)
+		if err != nil {
+			t.Errorf("Unexpected error while trying to delete temporary file: %v", err)
 		}
 	}
 }

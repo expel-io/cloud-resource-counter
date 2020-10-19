@@ -24,12 +24,14 @@ type CommandLineSettings struct {
 	defaultProfileName string
 
 	// Region related settings
+	allRegions bool
 	regionName string
 
 	// Output (CSV) file
 	outputFileName string
 	outputFile     *os.File
 	appendToOutput bool
+	noOutputFile   bool
 
 	// Trace file
 	traceFileName string
@@ -39,8 +41,8 @@ type CommandLineSettings struct {
 // Process inspects the command line for valid arguments.
 //
 // Usage of cloud-resource-counter
-//   --append:         Whether to append to an existing output file or not
-//   --output-file OF: Write the results to file OF
+//   --output-file OF: Write the results to file OF. Defaults to 'resources.csv'
+//   --no-output:      If set, then the results are not saved to any file.
 //   --profile PN:     Use the credentials associated with shared profile PN
 //   --region RN:      View resource counts for the AWS region RN
 //   --trace-file TF:  Create a trace file that contains all calls to AWS.
@@ -59,11 +61,11 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	// Define and parse the command line arguments...
-	flagSet.BoolVar(&cls.appendToOutput, "append", false, "Whether to append to an existing output file or not. (default false--replace previous contents)")
-	flagSet.StringVar(&cls.outputFileName, "output-file", "resources.csv", "CSV Output File. Specify a path to a `file` to save the generated CSV file. To have *no* data written to a file, specify an empty string as the value \"\".")
+	flagSet.StringVar(&cls.outputFileName, "output-file", "", "CSV Output File. Specify a path to a `file` to save the generated CSV file. (default resources.csv)")
+	flagSet.BoolVar(&cls.noOutputFile, "no-output", false, "Do not save the results of this run into any file. (default false--save results to a file)")
 	flagSet.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "The name of the AWS Profile to use.")
 	flagSet.StringVar(&cls.regionName, "region", "", "The name of the AWS Region to use. If omitted, then all regions will be examined. This is the default behavior.")
-	flagSet.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a `file` to record API calls being made.")
+	flagSet.StringVar(&cls.traceFileName, "trace-file", "", "AWS Trace Log. Specify a `file` to record API calls being made. Each subsequent run OVERWRITES the prior run.")
 	flagSet.BoolVar(&showVersion, "version", false, "Shows the version number.")
 	flagSet.Parse(args)
 
@@ -74,6 +76,22 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 			am.ActionError("Error: '%s' is not a valid AWS Region name.", cls.regionName)
 			return emptyFn
 		}
+	} else {
+		// Record that all regions are being examined
+		cls.allRegions = true
+	}
+
+	// If both --output-file and --no-output specified, then complain
+	if cls.outputFileName != "" && cls.noOutputFile {
+		// Show error...
+		am.ActionError("Error: Cannot specify both --output-file and -no-output!")
+		return emptyFn
+	}
+
+	// If no output file specified, then use a
+	if cls.outputFileName == "" {
+		// Set the default output file
+		cls.outputFileName = "resources.csv"
 	}
 
 	// Did the user just want to see the version?
@@ -86,6 +104,9 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 
 	// Check whether a response file is being specified
 	if cls.outputFileName != "" {
+		// Determine whether to append the output file or not
+		cls.appendToOutput = FileExists(cls.outputFileName)
+
 		// Try to open the file for writing
 		cls.outputFile = OpenFileForWriting(cls.outputFileName, "CSV", am, cls.appendToOutput)
 	}

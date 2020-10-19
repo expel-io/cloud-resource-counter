@@ -97,3 +97,17 @@ func Map(vs []string, f func(string) string) []string {
 func NilInterface(intf interface{}) bool {
 	return intf == nil || reflect.ValueOf(intf).IsNil()
 }
+
+// FileExists checks if a file exists and is not a directory before we
+// try using it to prevent further errors.
+func FileExists(fileName string) bool {
+	// Stat the file
+	info, err := os.Stat(fileName)
+
+	// Check for non-existent file
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
+}
