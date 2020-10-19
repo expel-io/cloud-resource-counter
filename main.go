@@ -9,6 +9,7 @@ package main
 
 import (
 	"os"
+	"time"
 )
 
 // The version of this tool. This is supplied by the build process.
@@ -76,16 +77,26 @@ func main() {
 	}
 	results.Init()
 
+	// Get the display name of the selected region
+	var displayRegion string
+	if settings.allRegions {
+		displayRegion = "ALL_REGIONS"
+	} else {
+		displayRegion = settings.regionName
+	}
+
 	// Create a new row of data
 	results.NewRow()
 	results.Append("Account ID", GetAccountID(serviceFactory.GetAccountIDService(), monitor))
-	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.regionName == ""))
-	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.regionName == ""))
+	results.Append("Timestamp", time.Now().Format(time.RFC3339))
+	results.Append("Region", displayRegion)
+	results.Append("# of EC2 Instances", EC2Counts(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Spot Instances", SpotInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of EBS Volumes", EBSVolumes(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Unique Containers", UniqueContainerImages(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
+	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
