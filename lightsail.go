@@ -76,5 +76,14 @@ func lightsailInstancesForSingleRegion(lss *LightsailService, am ActivityMonitor
 		return 0
 	}
 
-	return len(response.Instances)
+	// Loop through the instances...
+	var instanceCount int
+	for _, inst := range response.Instances {
+		// Is the instance running?
+		if inst.State != nil && inst.State.Name != nil && *inst.State.Name == "running" {
+			instanceCount++
+		}
+	}
+
+	return instanceCount
 }

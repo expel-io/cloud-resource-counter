@@ -414,7 +414,8 @@ As you can see, this is the correct form of the AWS Region that we want to use.
 Here's how we get the number of Lightsail instances in a given region:
 
 ```bash
-$ aws lightsail get-instances $aws_p --region us-east-1 --query 'length(instances)'
+$ aws lightsail get-instances $aws_p --region us-east-1 \
+   --query 'length(instances[?state.name==`running`])'
 2
 ```
 
@@ -423,7 +424,8 @@ Here is how we put the two calls together to find all instances across all regio
 ```bash
 $ for reg in $(aws lightsail get-regions $aws_p --region us-east-1 --output text \
    --query 'regions[].name'); do \
-   aws lightsail get-instances $aws_p --region $reg --query 'length(instances)';
+   aws lightsail get-instances $aws_p --region $reg \
+      --query 'length(instances[?state.name==`running`])';
 done | paste -s -d+ - | bc
 3
 ```
@@ -436,3 +438,5 @@ The last count is probably the easiest. To get a list of all S3 buckets in all r
 $ aws s3api list-buckets $aws_p --query 'length(Buckets)'
 10
 ```
+
+Note that it is not possible through the AWS CLI to get S3 buckets on a per-region basis.
