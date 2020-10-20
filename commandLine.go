@@ -88,8 +88,8 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 		return emptyFn
 	}
 
-	// If no output file specified, then use a
-	if cls.outputFileName == "" {
+	// If no output file specified, then use a default name (assuming that we are not barring output)
+	if cls.outputFileName == "" && !cls.noOutputFile {
 		// Set the default output file
 		cls.outputFileName = "resources.csv"
 	}

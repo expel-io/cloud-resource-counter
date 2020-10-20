@@ -40,7 +40,7 @@ x cloud-resource-counter
 
 The result is a binary called `cloud-resource-counter` in the current directory.
 
-These binaries run on Linux OSes (32- and 64-bit versions) and MacOS (Go 1.15 requires macOS 10.12 Sierra or later).
+These binaries can run on Linux OSes (32- and 64-bit versions) and MacOS (10.12 Sierra or later).
 
 ### MacOS Download
 
@@ -110,7 +110,7 @@ The `cloud-resource-counter` examines the following resources:
 
    * This is stored in the generated CSV file under the "Account ID" column.
 
-1. **EC2**. We count the number of EC2 instances (both "normal" and Spot instances) across all regions.
+1. **EC2**. We count the number of EC2 **running** instances (both "normal" and Spot instances) across all regions.
 
    * For EC2 instances, we only count those _without_ an Instance Lifecycle tag (which is either `spot` or `scheduled`).
    * For Spot instance, we only count those with an Instance Lifecycle tag of `spot`.
@@ -127,6 +127,7 @@ The `cloud-resource-counter` examines the following resources:
 
    * We look at all task definitions and collect all of the `Image` name fields inside the Container Definitions.
    * We then simply count the number of unique `Image` names _across all regions._ This is the only resource counted this way.
+   * We do not check that there is more than 1 running task. If the task definition exists, we count it.
    * This is stored in the generated CSV file under the "# of Unique Containers" column.
 
 1. **Lambda Functions.** We count the number of all Lambda functions across all regions.
@@ -136,7 +137,7 @@ The `cloud-resource-counter` examines the following resources:
 
 1. **RDS Instances.** We count the number of RDS instance across all regions.
 
-   * We do not qualify the type of RDS instance.
+   * We only count those instances whose state is "available".
    * This is stored in the generated CSV file under the "# of RDS Instances" column.
 
 1. **Lightsail Instances.** We count the number of Lightsail instances across all regions.
@@ -219,13 +220,16 @@ Here is the command to count the number of _normal_ EC2 instances (those that ar
 
 ```bash
 $ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])'
 4
 ```
 
-The number 4 above means that there were 4 EC2 instances found. (Your results may vary.)
+The number 4 above means that there were 4 running EC2 instances found. (Your results may vary.)
 
-By default, the EC2 `describe-instances` "normal" EC2 instances as well as those that are "spot" instances. As such, the query argument does the following:
+The `filters` clause restricts the list to just those instances that are running.
+
+By default, the EC2 `describe-instances` returns "normal" EC2 instances as well as those that are "spot" instances. As such, the query argument does the following:
 
 1. Find all Instances (in all Reservations) and qualify each:
    * `InstanceLifecycle` attribute is not (`!`) non-null (`not_null`).
@@ -239,6 +243,7 @@ We will need to run this command over all regions. Here is what it looks like:
 ```bash
 $ for reg in $ec2_r; do \
       aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+         --filters Name=instance-state-name,Values=running \
          --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])' ; \
   done | paste -s -d+ - | bc
  23
@@ -258,6 +263,7 @@ Here is the command to count the number of _Spot_ instances for a given region:
 
 ```bash
 $ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])'
 1
 ```
@@ -269,6 +275,7 @@ We will need to run this command over all regions. Here is what it looks like:
 ```bash
 $ for reg in $ec2_r; do \
    aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])' ; \
 done | paste -s -d+ - | bc
 5
@@ -376,16 +383,18 @@ To get a list of RDS instances in a given region, we use the AWS CLI `rds` comma
 
 ```bash
 $ aws rds describe-db-instances $aws_p --no-paginate --region us-east-1 \
-   --query 'length(DBInstances)'
+   --query 'length(DBInstances[?DBInstanceStatus==`available`])'
 1
 ```
+
+You can see that we are only counting those DB Insances whose status is "available".
 
 To get a list of all RDS instances across all regions use:
 
 ```bash
 $ for reg in $ec2_r; do \
    aws rds describe-db-instances $aws_p --no-paginate --region $reg \
-      --query 'length(DBInstances)' ; \
+      --query 'length(DBInstances[?DBInstanceStatus==`available`])' ; \
 done | paste -s -d+ - | bc
 5
 ```
@@ -405,7 +414,8 @@ As you can see, this is the correct form of the AWS Region that we want to use.
 Here's how we get the number of Lightsail instances in a given region:
 
 ```bash
-$ aws lightsail get-instances $aws_p --region us-east-1 --query 'length(instances)'
+$ aws lightsail get-instances $aws_p --region us-east-1 \
+   --query 'length(instances[?state.name==`running`])'
 2
 ```
 
@@ -414,7 +424,8 @@ Here is how we put the two calls together to find all instances across all regio
 ```bash
 $ for reg in $(aws lightsail get-regions $aws_p --region us-east-1 --output text \
    --query 'regions[].name'); do \
-   aws lightsail get-instances $aws_p --region $reg --query 'length(instances)';
+   aws lightsail get-instances $aws_p --region $reg \
+      --query 'length(instances[?state.name==`running`])';
 done | paste -s -d+ - | bc
 3
 ```
@@ -427,3 +438,5 @@ The last count is probably the easiest. To get a list of all S3 buckets in all r
 $ aws s3api list-buckets $aws_p --query 'length(Buckets)'
 10
 ```
+
+Note that it is not possible through the AWS CLI to get S3 buckets on a per-region basis.

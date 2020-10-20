@@ -48,13 +48,19 @@ func spotInstancesForSingleRegion(ec2is *EC2InstanceService, am ActivityMonitor)
 	// Indicate activity
 	am.Message(".")
 
-	// Construct our input to find ONLY SPOT instances
+	// Construct our input to find ONLY RUNNING SPOT instances
 	input := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
 			{
 				Name: aws.String("instance-lifecycle"),
 				Values: []*string{
 					aws.String("spot"),
+				},
+			},
+			{
+				Name: aws.String("instance-state-name"),
+				Values: []*string{
+					aws.String("running"),
 				},
 			},
 		},
