@@ -164,7 +164,7 @@ func TestS3Buckets(t *testing.T) {
 		mon := &mock.ActivityMonitorImpl{}
 
 		// Invoke our S3 Buckets function
-		actualCount := S3Buckets(sf, mon)
+		actualCount := S3Buckets(sf, mon, false)
 
 		// Did we expect an error?
 		if c.ExpectError {

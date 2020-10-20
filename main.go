@@ -97,7 +97,7 @@ func main() {
 	results.Append("# of Lambda Functions", LambdaFunctions(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of RDS Instances", RDSInstances(serviceFactory, monitor, settings.allRegions))
 	results.Append("# of Lightsail Instances", LightsailInstances(serviceFactory, monitor, settings.allRegions))
-	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor))
+	results.Append("# of S3 Buckets", S3Buckets(serviceFactory, monitor, settings.allRegions))
 
 	/* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	 * Construct CSV Output
@@ -105,6 +105,11 @@ func main() {
 
 	// Save our results to a CSV file
 	results.Save(monitor)
+
+	// Do we need to "explain" our S3 count?
+	if !settings.allRegions {
+		monitor.Message("\n*S3 counts cannot be computed on a per-region basis. This count is for ALL REGIONS.\n")
+	}
 
 	// Indicate success
 	monitor.Message("\nSuccess.\n")
