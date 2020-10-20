@@ -50,21 +50,32 @@ var ec2Regions *ec2.DescribeRegionsOutput = &ec2.DescribeRegionsOutput{
 // This is our map of regions and the instances in each
 var ec2InstancesPerRegion = map[string][]*ec2.DescribeInstancesOutput{
 	// US-EAST-1 illustrates a case where DescribeInstancesPages returns two pages of results.
-	// First page: 2 different refervations (1 instance, then 2 instances [1 is spot])
-	// Second page: 1 reservation (2 instances)
+	// First page: 2 different reservations (1 running instance, then 2 instances [1 is spot])
+	// Second page: 1 reservation (2 instances, 1 of which is stopped)
 	"us-east-1": []*ec2.DescribeInstancesOutput{
 		&ec2.DescribeInstancesOutput{
 			Reservations: []*ec2.Reservation{
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 					},
 				},
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 						&ec2.Instance{
 							InstanceLifecycle: aws.String("spot"),
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
 						},
 					},
 				},
@@ -74,8 +85,16 @@ var ec2InstancesPerRegion = map[string][]*ec2.DescribeInstancesOutput{
 			Reservations: []*ec2.Reservation{
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("stopped"),
+							},
+						},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 					},
 				},
 			},
@@ -88,27 +107,58 @@ var ec2InstancesPerRegion = map[string][]*ec2.DescribeInstancesOutput{
 			Reservations: []*ec2.Reservation{
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("stopped"),
+							},
+						},
 						&ec2.Instance{
 							InstanceLifecycle: aws.String("scheduled"),
 						},
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 					},
 				},
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
-						&ec2.Instance{},
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("stopped"),
+							},
+						},
 					},
 				},
 				&ec2.Reservation{
 					Instances: []*ec2.Instance{
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 						&ec2.Instance{
 							InstanceLifecycle: aws.String("spot"),
+							State: &ec2.InstanceState{
+								Name: aws.String("stopped"),
+							},
 						},
-						&ec2.Instance{},
+						&ec2.Instance{
+							State: &ec2.InstanceState{
+								Name: aws.String("running"),
+							},
+						},
 					},
 				},
 			},
@@ -144,38 +194,92 @@ func (fake *fakeEC2Service) DescribeRegions(input *ec2.DescribeRegionsInput) (*e
 	return fake.DRResponse, nil
 }
 
-// Helper function that converts a filter name ("instance-lifecycle") to a field name ("InstanceLifecycle")
-func convertFilterNameToFieldName(filterName *string) string {
+// Helper function that converts a filter name ("instance-lifecycle") to a field name ("InstanceLifecycle").
+// For some names (e.g., "instance-state-name"), it needs to be converted into an array of nested field
+// names, as in ["State", "Name"].
+func convertFilterNameToFieldName(filterName *string) []string {
 	// Split the string into parts separated by dashes
 	parts := strings.Split(*filterName, "-")
 
 	// Convert each part to an Uppercase version
 	upperParts := Map(parts, strings.Title)
 
-	return strings.Join(upperParts, "")
+	// Combine the parts into one string
+	combined := strings.Join(upperParts, "")
+
+	// Special Case processing
+	var paths []string
+	if combined == "InstanceStateName" {
+		paths = []string{"State", "Name"}
+	} else {
+		paths = []string{combined}
+	}
+
+	return paths
 }
 
-// Helper function that determines whether a reflected instance satisfied a single filter
-func instanceSatisfiesFilter(reflectInstance *reflect.Value, filter *ec2.Filter) bool {
-	// Convert our filter name to a field name
-	fieldName := convertFilterNameToFieldName(filter.Name)
+// Helper function to resolve a path of fields to a single value through a set of pointers
+// to structures.
+func resolvePathByReflection(reflectStruct reflect.Value, fieldPath []string) (string, bool) {
+	// Loop through each path element
+	for ix, fieldName := range fieldPath {
+		// Is this the last element of the path?
+		lastField := ix == len(fieldPath)-1
 
-	// Is the name missing from the instance?
-	var f reflect.Value
-	if f = reflectInstance.FieldByName(fieldName); f.IsNil() {
-		return false
+		// Is the name missing from the struct?
+		var f reflect.Value
+		if f = reflectStruct.FieldByName(fieldName); !f.IsValid() || f.IsNil() {
+			return "", false
+		}
+
+		// What is the reflected value of what the field points to
+		reflectFieldValuePtr := reflect.ValueOf(f.Interface())
+
+		// Is the kind of value a Ptr? If not, get out now...
+		if reflectFieldValuePtr.Kind() != reflect.Ptr {
+			return "", false
+		}
+
+		// What is the value of the pointer (what does it refer to?)
+		reflectFieldValueRef := reflectFieldValuePtr.Elem()
+
+		// What kind of object does the pointer refer to?
+		ptrKind := reflectFieldValueRef.Kind()
+
+		// Switch on the kind of pointer
+		switch ptrKind {
+		case reflect.String:
+			// Are we looking at the last element of the path?
+			if lastField {
+				return reflectFieldValueRef.String(), true
+			}
+			return "", false
+
+		case reflect.Struct:
+			// Are there more fields to traverse?
+			if !lastField {
+				// This is the value of the interface pointer
+				reflectStruct = reflect.ValueOf(f.Elem().Interface())
+			} else {
+				return "", false
+			}
+			break
+		}
 	}
 
-	// What is the value of the what the field name points to
-	fieldNameValue := reflect.ValueOf(f.Interface())
+	return "", false
+}
 
-	// Is the kind of value a Ptr? If not, get out now...
-	if fieldNameValue.Kind() != reflect.Ptr {
+// Helper function that determines whether a reflected EC2 instance (struct) satisfied a single filter
+func instanceSatisfiesFilter(reflectStruct reflect.Value, filter *ec2.Filter) bool {
+	// Convert our filter name to a path of field names
+	fieldNamePath := convertFilterNameToFieldName(filter.Name)
+
+	// Get our field value from the path
+	fieldValue, ok := resolvePathByReflection(reflectStruct, fieldNamePath)
+	if !ok {
 		return false
 	}
-
-	// Dereference the pointer and get it as a string
-	fieldValue := fieldNameValue.Elem().String()
 
 	// Does this match one of the filter values?
 	for _, value := range filter.Values {
@@ -195,13 +299,13 @@ func instanceSatisifiesFilters(instance *ec2.Instance, filters []*ec2.Filter) bo
 		return true
 	}
 
-	// Perform reflection on the instance (struct)
-	reflectedInstance := reflect.ValueOf(*instance)
+	// Perform reflection on the EC2 Instance (struct)
+	reflectStruct := reflect.ValueOf(*instance)
 
 	// Loop through the list of filters
 	for _, filter := range filters {
 		// Does the instance FAIL to satisfy the filter?
-		if !instanceSatisfiesFilter(&reflectedInstance, filter) {
+		if !instanceSatisfiesFilter(reflectStruct, filter) {
 			return false
 		}
 	}
@@ -347,10 +451,10 @@ func TestEC2Counts(t *testing.T) {
 	}{
 		{
 			RegionName:    "us-east-1",
-			ExpectedCount: 4,
+			ExpectedCount: 3,
 		}, {
 			RegionName:    "us-east-2",
-			ExpectedCount: 7,
+			ExpectedCount: 5,
 		}, {
 			RegionName:    "af-south-1",
 			ExpectedCount: 0,
@@ -359,7 +463,7 @@ func TestEC2Counts(t *testing.T) {
 			ExpectError: true,
 		}, {
 			AllRegions:    true,
-			ExpectedCount: 11,
+			ExpectedCount: 8,
 		},
 	}
 

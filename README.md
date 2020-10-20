@@ -40,7 +40,7 @@ x cloud-resource-counter
 
 The result is a binary called `cloud-resource-counter` in the current directory.
 
-These binaries run on Linux OSes (32- and 64-bit versions) and MacOS (Go 1.15 requires macOS 10.12 Sierra or later).
+These binaries can run on Linux OSes (32- and 64-bit versions) and MacOS (10.12 Sierra or later).
 
 ### MacOS Download
 
@@ -110,7 +110,7 @@ The `cloud-resource-counter` examines the following resources:
 
    * This is stored in the generated CSV file under the "Account ID" column.
 
-1. **EC2**. We count the number of EC2 instances (both "normal" and Spot instances) across all regions.
+1. **EC2**. We count the number of EC2 **running** instances (both "normal" and Spot instances) across all regions.
 
    * For EC2 instances, we only count those _without_ an Instance Lifecycle tag (which is either `spot` or `scheduled`).
    * For Spot instance, we only count those with an Instance Lifecycle tag of `spot`.
@@ -219,13 +219,16 @@ Here is the command to count the number of _normal_ EC2 instances (those that ar
 
 ```bash
 $ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])'
 4
 ```
 
-The number 4 above means that there were 4 EC2 instances found. (Your results may vary.)
+The number 4 above means that there were 4 running EC2 instances found. (Your results may vary.)
 
-By default, the EC2 `describe-instances` "normal" EC2 instances as well as those that are "spot" instances. As such, the query argument does the following:
+The `filters` clause restricts the list to just those instances that are running.
+
+By default, the EC2 `describe-instances` returns "normal" EC2 instances as well as those that are "spot" instances. As such, the query argument does the following:
 
 1. Find all Instances (in all Reservations) and qualify each:
    * `InstanceLifecycle` attribute is not (`!`) non-null (`not_null`).
@@ -239,6 +242,7 @@ We will need to run this command over all regions. Here is what it looks like:
 ```bash
 $ for reg in $ec2_r; do \
       aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+         --filters Name=instance-state-name,Values=running \
          --query 'length(Reservations[].Instances[?!not_null(InstanceLifecycle)].InstanceId[])' ; \
   done | paste -s -d+ - | bc
  23
@@ -258,6 +262,7 @@ Here is the command to count the number of _Spot_ instances for a given region:
 
 ```bash
 $ aws ec2 describe-instances $aws_p --no-paginate --region us-east-1 \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])'
 1
 ```
@@ -269,6 +274,7 @@ We will need to run this command over all regions. Here is what it looks like:
 ```bash
 $ for reg in $ec2_r; do \
    aws ec2 describe-instances $aws_p --no-paginate --region $reg \
+      --filters Name=instance-state-name,Values=running \
       --query 'length(Reservations[].Instances[?InstanceLifecycle==`spot`].InstanceId[])' ; \
 done | paste -s -d+ - | bc
 5

@@ -30,7 +30,7 @@ func TestSpotInstances(t *testing.T) {
 			ExpectedCount: 1,
 		}, {
 			RegionName:    "us-east-2",
-			ExpectedCount: 1,
+			ExpectedCount: 0,
 		}, {
 			RegionName:    "af-south-1",
 			ExpectedCount: 0,
@@ -39,7 +39,7 @@ func TestSpotInstances(t *testing.T) {
 			ExpectError: true,
 		}, {
 			AllRegions:    true,
-			ExpectedCount: 2,
+			ExpectedCount: 1,
 		},
 	}
 

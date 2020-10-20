@@ -8,6 +8,7 @@ Summary: Provides a count of all (non-spot) EC2 instances.
 package main
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
 	color "github.com/logrusorgru/aurora"
@@ -48,8 +49,17 @@ func ec2CountForSingleRegion(ec2is *EC2InstanceService, am ActivityMonitor) int 
 	// Indicate activity
 	am.Message(".")
 
-	// Construct our input to find all EC2 instances
-	input := &ec2.DescribeInstancesInput{}
+	// Construct our input to find only RUNNING EC2 instances
+	input := &ec2.DescribeInstancesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("instance-state-name"),
+				Values: []*string{
+					aws.String("running"),
+				},
+			},
+		},
+	}
 
 	// Invoke our service
 	instanceCount := 0
