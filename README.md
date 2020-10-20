@@ -127,6 +127,7 @@ The `cloud-resource-counter` examines the following resources:
 
    * We look at all task definitions and collect all of the `Image` name fields inside the Container Definitions.
    * We then simply count the number of unique `Image` names _across all regions._ This is the only resource counted this way.
+   * We do not check that there is more than 1 running task. If the task definition exists, we count it.
    * This is stored in the generated CSV file under the "# of Unique Containers" column.
 
 1. **Lambda Functions.** We count the number of all Lambda functions across all regions.
@@ -136,7 +137,7 @@ The `cloud-resource-counter` examines the following resources:
 
 1. **RDS Instances.** We count the number of RDS instance across all regions.
 
-   * We do not qualify the type of RDS instance.
+   * We only count those instances whose state is "available".
    * This is stored in the generated CSV file under the "# of RDS Instances" column.
 
 1. **Lightsail Instances.** We count the number of Lightsail instances across all regions.
@@ -382,16 +383,18 @@ To get a list of RDS instances in a given region, we use the AWS CLI `rds` comma
 
 ```bash
 $ aws rds describe-db-instances $aws_p --no-paginate --region us-east-1 \
-   --query 'length(DBInstances)'
+   --query 'length(DBInstances[?DBInstanceStatus==`available`])'
 1
 ```
+
+You can see that we are only counting those DB Insances whose status is "available".
 
 To get a list of all RDS instances across all regions use:
 
 ```bash
 $ for reg in $ec2_r; do \
    aws rds describe-db-instances $aws_p --no-paginate --region $reg \
-      --query 'length(DBInstances)' ; \
+      --query 'length(DBInstances[?DBInstanceStatus==`available`])' ; \
 done | paste -s -d+ - | bc
 5
 ```

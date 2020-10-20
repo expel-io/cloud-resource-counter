@@ -11,6 +11,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -30,29 +31,59 @@ var rdsInstancesPerRegion = map[string][]*rds.DescribeDBInstancesOutput{
 		&rds.DescribeDBInstancesOutput{},
 	},
 	// US-EAST-2 illustrates a case where DescribeDBInstancesPages returns two pages of results.
-	// First page: 3 instances
-	// Second page: 2 instances
+	// First page: 5 instances, 3 are available
+	// Second page: 4 instances, 2 are available
 	"us-east-2": []*rds.DescribeDBInstancesOutput{
 		&rds.DescribeDBInstancesOutput{
 			DBInstances: []*rds.DBInstance{
-				&rds.DBInstance{},
-				&rds.DBInstance{},
-				&rds.DBInstance{},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("backing-up"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("creating"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
 			},
 		},
 		&rds.DescribeDBInstancesOutput{
 			DBInstances: []*rds.DBInstance{
-				&rds.DBInstance{},
-				&rds.DBInstance{},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("stopped"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("stopping"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
 			},
 		},
 	},
 	// AF-SOUTH-1 is an "opted in" region (Cape Town, Africa). We are going to
-	// simply indicate that 1 instance exists here.
+	// simply indicate that 3 instance exists here (only 1 running).
 	"af-south-1": []*rds.DescribeDBInstancesOutput{
 		&rds.DescribeDBInstancesOutput{
 			DBInstances: []*rds.DBInstance{
-				&rds.DBInstance{},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("upgrading"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("available"),
+				},
+				&rds.DBInstance{
+					DBInstanceStatus: aws.String("backtracking"),
+				},
 			},
 		},
 	},

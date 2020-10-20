@@ -52,7 +52,12 @@ func rdsInstancesForSingleRegion(rdsis *RDSInstanceService, am ActivityMonitor) 
 	// Invoke our service
 	instanceCount := 0
 	err := rdsis.InspectInstances(input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
-		instanceCount += len(page.DBInstances)
+		// Loop through the DB Instances...
+		for _, dbi := range page.DBInstances {
+			if dbi.DBInstanceStatus != nil && *dbi.DBInstanceStatus == "available" {
+				instanceCount++
+			}
+		}
 
 		return true
 	})
