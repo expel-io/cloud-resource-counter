@@ -103,7 +103,7 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 	}
 
 	// Check whether a response file is being specified
-	if cls.outputFileName != "" {
+	if cls.outputFileName != "" && !cls.noOutputFile {
 		// Determine whether to append the output file or not
 		cls.appendToOutput = FileExists(cls.outputFileName)
 

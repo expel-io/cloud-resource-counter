@@ -105,7 +105,7 @@ func TestCommandLineTrace(t *testing.T) {
 	mon := &mock.ActivityMonitorImpl{}
 
 	// Invoke the Process method
-	cleanupFn := settings.Process([]string{"--trace-file", tempFile, "--output-file", ""}, mon)
+	cleanupFn := settings.Process([]string{"--trace-file", tempFile, "--no-output"}, mon)
 
 	// Invoke the cleanup fn
 	cleanupFn()
