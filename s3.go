@@ -24,7 +24,7 @@ import (
 //
 // This method gives status back to the user via the supplied
 // ActivityMonitor instance.
-func S3Buckets(sf ServiceFactory, am ActivityMonitor) int {
+func S3Buckets(sf ServiceFactory, am ActivityMonitor, allRegions bool) int {
 	// Create a new instance of the S3 (abstract) service
 	svc := sf.GetS3Service()
 
@@ -45,8 +45,14 @@ func S3Buckets(sf ServiceFactory, am ActivityMonitor) int {
 	// Get our count of buckets
 	count := len(result.Buckets)
 
+	// Should we "qualify" our count?
+	var qualify string
+	if !allRegions && count > 0 {
+		qualify = "*"
+	}
+
 	// Indicate end of activity
-	am.EndAction("OK (%d)", color.Bold(count))
+	am.EndAction("OK (%d%s)", color.Bold(count), qualify)
 
 	return count
 }

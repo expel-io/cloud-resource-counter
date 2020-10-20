@@ -148,6 +148,7 @@ The `cloud-resource-counter` examines the following resources:
 1. **S3 Buckets.** We count the number of S3 buckets across all regions.
 
    * We do not qualify the type of S3 bucket.
+   * *NOTE:* We cannot currently count S3 buckets on a per-region basis (due to limitations with the AWS SDK).
    * This is stored in the generated CSV file under the "# of S3 Buckets" column.
 
 ## Alternative Means of Resource Counting
