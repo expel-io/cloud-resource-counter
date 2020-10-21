@@ -59,7 +59,7 @@ AWS Access Key ID [None]: ...
 
 where `some-profile-name` is the name you would like to use to name this set of credentials. You would be prompted for several strings (AWS Access Key ID, AWS Secret Access Key, Default region name, Default output format).
 
-For help on storing AWS credentials in [Configuration Basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
+For help on storing AWS credentials, see [Configuration Basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
 
 ### Using cloud-resource-counter
 
@@ -69,7 +69,7 @@ Argument         | Meaning
 -----------------|----------------------------------
 --help           | Information on the command line options.
 --output-file OF | Write the results in Comma Separated Values format to file OF. Defaults to 'resources.csv'.
---no-output      | Do not save the results to any file.
+--no-output      | Do not save the results to *any* file. Defaults to `false` (save to a file).
 --profile PN     | Use the credentials associated with shared profile named PN. If omitted, then the default profile is used (often called "default").
 --region RN      | Collect resource counts for a single AWS region RN. If omitted, all regions are examined.
 --trace-file TF  | Write a trace of all AWS calls to file TF.
@@ -81,11 +81,11 @@ We designed the tool to make it as easy as possible to run. If you run it withou
 
 * We will examine ALL REGIONS to give you a comprehsive view of your AWS resources.
 * We will use the credentials associated with your DEFAULT PROFILE (honoring the `AWS_PROFILE` environment variable).
-* We will SAVE THE RESULTS to a file called `resources.csv`
+* We will SAVE THE RESULTS to a file called `resources.csv`.
 
 If you have multiple accounts associated with your AWS Organization, you can invoke the tool repeatedly for each different profile:
 
-1. Simply invoke the tool again with the `--profile other-profile` where "other-profile" is the name of your other profile.
+* Simply invoke the tool again with the `--profile other-profile` where "other-profile" is the name of your other profile.
 
 The results of your prior runs are saved as we will automatically **append** rather than *overwrite* the output file.
 
@@ -133,23 +133,35 @@ Column Name | Column Notes |
 ------------|--------------
 Account ID  | This is the account number associated with the profile that you used.
 Timestamp   | This indicates when you collected the resource count.
-Region      | This indicates what single region (e.g., us-east-1) was inspected. If you did not specify a region, `ALL_REGIONS` is shown.
+Region      | This indicates what single region (e.g., `us-east-1`) was inspected. If you did not specify a region, `ALL_REGIONS` is shown.
 
 The rest of the columns refer to specific counts of a type of resource.
 
 ## Installing
 
-You can build this from source or use the precompiled binaries (see the [Releases](https://github.com/expel-io/cloud-resource-counter/releases) page for binaries). We provided binaries for Linux (x86_64 and i386) and MacOS. There is no installation process as this is simply a command line tool. To unzip from the command line, use:
+You can build this from source or use the precompiled binaries (see the [Releases](https://github.com/expel-io/cloud-resource-counter/releases) page for binaries). We provided binaries for Linux (x86_64 and i386) and MacOS. There is no installation process as this is simply a command line tool. To unzip and untar from the command line, use this for a MacOS setup:
 
 ```bash
 $ tar -Zxvf cloud-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
-x README
+x LICENSE
+x README.md
+x cloud-resource-counter
+```
+
+The command on Linux is similar:
+
+```bash
+$ tar -zxvf cloud-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
+x LICENSE
+x README.md
 x cloud-resource-counter
 ```
 
 The result is a binary called `cloud-resource-counter` in the current directory.
 
 These binaries can run on Linux OSes (32- and 64-bit versions) and MacOS (10.12 Sierra or later).
+
+**NOTE:** It is important that this tool run from inside the Terminal application when running on MacOS. In particular, it can be run directly from inside the Finder application.
 
 ### MacOS Download
 
