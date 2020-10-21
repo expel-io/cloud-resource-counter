@@ -1,6 +1,6 @@
 # cloud-resource-counter
 
-![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master)
+![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master) ![Release with goreleaser](https://github.com/expel-io/cloud-resource-counter/workflows/Release%20with%20goreleaser/badge.svg)
 
 Go utility for counting the resources in use at a cloud infrastructure provider.
 
