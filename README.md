@@ -163,7 +163,7 @@ The result is a binary called `cloud-resource-counter` in the current directory.
 
 These binaries can run on Linux OSes (32- and 64-bit versions) and MacOS (10.12 Sierra or later).
 
-**NOTE:** It is important that this tool run from inside the Terminal application when running on MacOS. In particular, it can be run directly from inside the Finder application.
+**NOTE:** It is important that this tool run from inside the Terminal application when running on MacOS. In particular, it *cannot* be run directly from inside the Finder application.
 
 ### MacOS Download
 
