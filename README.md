@@ -9,24 +9,133 @@ a cloud deployment (for now, only Amazon Web Services) to assess the number of
 distinct computing resources. The result is a CSV file that describes the counts
 of each.
 
-This command requires access to a valid AWS Account. For now, it is assumed that
-this is stored in the user's `.aws` folder (located in `$HOME/.aws`).
+**Table of Contents**
+
+* [Command Line](#command-line)
+  * [AWS CLI Setup](#aws-cli-setup)
+  * [Saving Credentials in a Profile](#saving-credentials-in-a-profile)
+  * [Using cloud-resource-counter](#using-cloud-resource-counter)
+  * [Repeated Usage](#repeated-usage)
+* [Sample Run, CSV File](#sample-run-csv-file)
+* [Installing](#installing)
+  * [MacOS Download](#macos-download)
+* [Building from Source](#building-from-source)
+* [Minimal IAM Policy](#minimal-iam-policy)
+* [Resources Counted](#resources-counted)
+* [Alternative Means of Resource Counting](#alternative-means-of-resource-counting)
+  * [Setup](#setup)
+  * [Account ID](#account-id)
+  * [EC2 and Spot Instances](#ec2-and-spot-instances)
+    * [Regions](#regions)
+    * [Normal Instances](#normal-instances)
+    * [Spot Instances](#spot-instances)
+  * [EBS Volumes](#ebs-volumes)
+  * [Unique ECS Containers](#unique-ecs-containers)
+    * [List Task Definitions](#list-task-definitions)
+    * [Describe Task Definition](#describe-task-definition)
+  * [Lambda Functions](#lambda-functions)
+  * [RDS Instances](#rds-instances)
+  * [Lightsail Instances](#lightsail-instances)
+  * [S3 Buckets](#s3-buckets)
 
 ## Command Line
+
+This command line tool requires access to a valid AWS Account. It assumes that the credentials for an account are stored in an AWS configuration folder (e.g., `$HOME/.aws`). You may store several sets of credentials, each being denoted by its own "profile name".
+
+If you have ever run the AWS CLI, you will already have these profiles configured. This tool uses the same mechanism of retrieving and using stored credentials.
+
+### AWS CLI Setup
+
+If you have not yet stored credentials for your AWS accounts, you must first install the AWS CLI v2 (see [Installing the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) for details).
+
+### Saving Credentials in a Profile
+
+If you already have AWS CLI installed, you would simply run:
+
+```bash
+$ aws configure --profile some-profile-name
+AWS Access Key ID [None]: ...
+```
+
+where `some-profile-name` is the name you would like to use to name this set of credentials. You would be prompted for several strings (AWS Access Key ID, AWS Secret Access Key, Default region name, Default output format).
+
+For help on storing AWS credentials in [Configuration Basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
+
+### Using cloud-resource-counter
 
 The following command line arguments are supported:
 
 Argument         | Meaning
 -----------------|----------------------------------
---help           | Information on the command line options
+--help           | Information on the command line options.
 --output-file OF | Write the results in Comma Separated Values format to file OF. Defaults to 'resources.csv'.
 --no-output      | Do not save the results to any file.
---profile PN     | Use the credentials associated with shared profile named PN.
+--profile PN     | Use the credentials associated with shared profile named PN. If omitted, then the default profile is used (often called "default").
 --region RN      | Collect resource counts for a single AWS region RN. If omitted, all regions are examined.
 --trace-file TF  | Write a trace of all AWS calls to file TF.
 --version        | Display version information and then exit.
 
-When run repeatedly, results are automatically **appended** to the existing file. If you wish to not save the results of a run to _any_ file, use `--no-output`.
+### Repeated Usage
+
+We designed the tool to make it as easy as possible to run. If you run it without any arguments, we will invoke the tool with the following defaults:
+
+* We will examine ALL REGIONS to give you a comprehsive view of your AWS resources.
+* We will use the credentials associated with your DEFAULT PROFILE (honoring the `AWS_PROFILE` environment variable).
+* We will SAVE THE RESULTS to a file called `resources.csv`
+
+If you have multiple accounts associated with your AWS Organization, you can invoke the tool repeatedly for each different profile:
+
+1. Simply invoke the tool again with the `--profile other-profile` where "other-profile" is the name of your other profile.
+
+The results of your prior runs are saved as we will automatically **append** rather than *overwrite* the output file.
+
+If you wish to not save the results of a run to _any_ file, use the `--no-output` flag on the command line.
+
+## Sample Run, CSV File
+
+Here is what it looks like when you run the tool:
+
+```bash
+$ cloud-resource-counter
+Cloud Resource Counter (v0.7.0) running with:
+ o AWS Profile: default
+ o AWS Region:  (All regions supported by this account)
+ o Output file: resources.csv
+
+Activity
+ * Retrieving Account ID...OK (240520192079)
+ * Retrieving EC2 counts...................OK (5)
+ * Retrieving Spot instance counts...................OK (4)
+ * Retrieving EBS volume counts...................OK (9)
+ * Retrieving Unique container counts...................OK (3)
+ * Retrieving Lambda function counts...................OK (12)
+ * Retrieving RDS instance counts...................OK (7)
+ * Retrieving Lightsail instance counts................OK (0)
+ * Retrieving S3 bucket counts...OK (13)
+ * Writing to file...OK
+
+Success.
+```
+
+As you can see above, no command line arguments were necessary: it used my default profile ("profile"), selected all regions and saved results to a file called "resources.csv".
+
+Here is what the CSV file looks like. It is important to mention that this tool was run TWICE to collect the results of two different accounts/profiles.
+
+```csv
+Account ID,Timestamp,Region,# of EC2 Instances,# of Spot Instances,# of EBS Volumes,# of Unique Containers,# of Lambda Functions,# of RDS Instances,# of Lightsail Instances,# of S3 Buckets
+896149672290,2020-10-20T16:29:39-04:00,ALL_REGIONS,2,3,7,3,2,3,2,2
+240520192079,2020-10-21T16:24:06-04:00,ALL_REGIONS,5,4,9,3,12,7,0,13
+```
+
+Here are some notes on specific columns:
+
+Column Name | Column Notes |
+------------|--------------
+Account ID  | This is the account number associated with the profile that you used.
+Timestamp   | This indicates when you collected the resource count.
+Region      | This indicates what single region (e.g., us-east-1) was inspected. If you did not specify a region, `ALL_REGIONS` is shown.
+
+The rest of the columns refer to specific counts of a type of resource.
 
 ## Installing
 
