@@ -205,7 +205,7 @@ To use this utility, this minimal IAM Profile can be associated with a bare user
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "Cloud Resource Counter Permissions",
+            "Sid": "cloudresourcecounterpermissions",
             "Effect": "Allow",
             "Action": [
                 "ec2:DescribeInstances",
