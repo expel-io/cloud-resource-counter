@@ -42,6 +42,8 @@ of each.
 
 This command line tool requires access to a valid AWS Account. It assumes that the credentials for an account are stored in an AWS configuration folder (e.g., `$HOME/.aws`). You may store several sets of credentials, each being denoted by its own "profile name".
 
+If you omit a profile (or the profile you specify does not contain credentials), this tool will check for AWS environment variables that contain the access key and secret access key. This enables tools such as HashiCorp's Vault to work seamlessly with the tool.
+
 If you have ever run the AWS CLI, you will already have these profiles configured. This tool uses the same mechanism of retrieving and using stored credentials.
 
 ### AWS CLI Setup

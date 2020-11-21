@@ -12,6 +12,7 @@ import (
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -201,8 +202,18 @@ type AWSServiceFactory struct {
 // in the current user's directories and prepares the session for
 // tracing (if requested).
 func (awssf *AWSServiceFactory) Init() {
-	// Create an initial configuration object (pointer)
-	config := &aws.Config{}
+	// Create an initial configuration object which defines our chain
+	// of credentials providers: first, honor a supplied profile name,
+	// if that fails, look for the environment variables.
+	config := &aws.Config{
+		Credentials: credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.SharedCredentialsProvider{
+					Profile: awssf.ProfileName,
+				},
+				&credentials.EnvProvider{},
+			}),
+	}
 
 	// Was a region specified by the user?
 	if awssf.RegionName != "" {
@@ -223,9 +234,7 @@ func (awssf *AWSServiceFactory) Init() {
 
 	// Construct our session Options object
 	options := session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-		Profile:           awssf.ProfileName,
-		Config:            *config,
+		Config: *config,
 	}
 
 	// Ensure that we have a session
