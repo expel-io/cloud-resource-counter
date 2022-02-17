@@ -57,6 +57,7 @@ func main() {
 		ProfileName: settings.profileName,
 		RegionName:  settings.regionName,
 		TraceWriter: settings.traceFile,
+		UseSSO:      settings.useSSO,
 	}
 	serviceFactory.Init()
 

@@ -74,6 +74,7 @@ Argument         | Meaning
 --no-output      | Do not save the results to *any* file. Defaults to `false` (save to a file).
 --profile PN     | Use the credentials associated with shared profile named PN. If omitted, then the default profile is used (often called "default").
 --region RN      | Collect resource counts for a single AWS region RN. If omitted, all regions are examined.
+--sso            | Use SSO for authentication. Defaults to `false`.
 --trace-file TF  | Write a trace of all AWS calls to file TF.
 --version        | Display version information and then exit.
 

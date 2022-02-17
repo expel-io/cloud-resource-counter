@@ -195,6 +195,7 @@ type AWSServiceFactory struct {
 	ProfileName string
 	RegionName  string
 	TraceWriter io.Writer
+	UseSSO      bool
 }
 
 // Init initializes the AWS service factory by creating an
@@ -202,18 +203,7 @@ type AWSServiceFactory struct {
 // in the current user's directories and prepares the session for
 // tracing (if requested).
 func (awssf *AWSServiceFactory) Init() {
-	// Create an initial configuration object which defines our chain
-	// of credentials providers: first, honor a supplied profile name,
-	// if that fails, look for the environment variables.
-	config := &aws.Config{
-		Credentials: credentials.NewChainCredentials(
-			[]credentials.Provider{
-				&credentials.SharedCredentialsProvider{
-					Profile: awssf.ProfileName,
-				},
-				&credentials.EnvProvider{},
-			}),
-	}
+	config := &aws.Config{}
 
 	// Was a region specified by the user?
 	if awssf.RegionName != "" {
@@ -235,6 +225,24 @@ func (awssf *AWSServiceFactory) Init() {
 	// Construct our session Options object
 	options := session.Options{
 		Config: *config,
+	}
+
+	// options to set if using SSO
+	if awssf.UseSSO {
+		options.SharedConfigState = session.SharedConfigEnable
+		options.Profile = awssf.ProfileName
+	} else {
+		// Create an initial configuration object which defines our chain
+		// of credentials providers: first, honor a supplied profile name,
+		// if that fails, look for the environment variables.
+		options.Config.Credentials = credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.SharedCredentialsProvider{
+					Profile: awssf.ProfileName,
+				},
+				&credentials.EnvProvider{},
+			},
+		)
 	}
 
 	// Ensure that we have a session

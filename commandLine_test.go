@@ -19,6 +19,7 @@ func TestCommandLineProcess(t *testing.T) {
 		ExpectExit       bool
 		ExpectAppend     bool
 		ExpectAllRegions bool
+		ExpectSSO        bool
 	}{
 		{
 			Args:             []string{"--output-file", tempFile},
@@ -41,6 +42,12 @@ func TestCommandLineProcess(t *testing.T) {
 			Args:             []string{"--version"},
 			ExpectExit:       true,
 			ExpectAllRegions: true,
+		},
+		{
+			Args:             []string{"--sso", "--output-file", tempFile},
+			ExpectAppend:     true,
+			ExpectAllRegions: true,
+			ExpectSSO:        true,
 		},
 	}
 
@@ -81,6 +88,8 @@ func TestCommandLineProcess(t *testing.T) {
 			t.Errorf("Unexpected Append: expected %v, actual: %v", c.ExpectAppend, settings.appendToOutput)
 		} else if c.ExpectAllRegions != settings.allRegions {
 			t.Errorf("Unexpected AllRegions: expected %v, actual: %v", c.ExpectAllRegions, settings.allRegions)
+		} else if c.ExpectSSO != settings.useSSO {
+			t.Errorf("Unexpected SSO: expected %v, actual: %v", c.ExpectSSO, settings.useSSO)
 		}
 	}
 

@@ -22,6 +22,7 @@ type CommandLineSettings struct {
 	// Profile related settings
 	profileName        string
 	defaultProfileName string
+	useSSO             bool
 
 	// Region related settings
 	allRegions bool
@@ -41,6 +42,7 @@ type CommandLineSettings struct {
 // Process inspects the command line for valid arguments.
 //
 // Usage of cloud-resource-counter
+//   --sso:            Use SSO for authentication
 //   --output-file OF: Write the results to file OF. Defaults to 'resources.csv'
 //   --no-output:      If set, then the results are not saved to any file.
 //   --profile PN:     Use the credentials associated with shared profile PN
@@ -61,6 +63,7 @@ func (cls *CommandLineSettings) Process(args []string, am ActivityMonitor) func(
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	// Define and parse the command line arguments...
+	flagSet.BoolVar(&cls.useSSO, "sso", false, "Use SSO for authentication (default false)")
 	flagSet.StringVar(&cls.outputFileName, "output-file", "", "CSV Output File. Specify a path to a `file` to save the generated CSV file. (default resources.csv)")
 	flagSet.BoolVar(&cls.noOutputFile, "no-output", false, "Do not save the results of this run into any file. (default false--save results to a file)")
 	flagSet.StringVar(&cls.profileName, "profile", cls.defaultProfileName, "The name of the AWS Profile to use.")
