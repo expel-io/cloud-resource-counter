@@ -44,10 +44,10 @@ func TestCommandLineProcess(t *testing.T) {
 			ExpectAllRegions: true,
 		},
 		{
-			Args:             []string{"--sso"},
+			Args:             []string{"--sso", "--output-file", tempFile},
 			ExpectAppend:     true,
-			ExpectSSO:        true,
 			ExpectAllRegions: true,
+			ExpectSSO:        true,
 		},
 	}
 
