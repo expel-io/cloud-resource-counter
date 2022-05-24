@@ -41,7 +41,7 @@ type CommandLineSettings struct {
 
 // Process inspects the command line for valid arguments.
 //
-// Usage of cloud-resource-counter
+// Usage of aws-resource-counter
 //   --sso:            Use SSO for authentication
 //   --output-file OF: Write the results to file OF. Defaults to 'resources.csv'
 //   --no-output:      If set, then the results are not saved to any file.

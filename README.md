@@ -1,11 +1,11 @@
-# cloud-resource-counter
+# aws-resource-counter
 
-![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master) ![Release with goreleaser](https://github.com/expel-io/cloud-resource-counter/workflows/Release%20with%20goreleaser/badge.svg)
+![Build, Lint and Test](https://github.com/expel-io/aws-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master) ![Release with goreleaser](https://github.com/expel-io/aws-resource-counter/workflows/Release%20with%20goreleaser/badge.svg)
 
-Go utility for counting the resources in use at a cloud infrastructure provider.
+Go utility for counting the resources in use in an AWS organization.
 
-The cloud resource counter utility known as "cloud-resource-counter" inspects
-a cloud deployment (for now, only Amazon Web Services) to assess the number of
+The AWS resource counter utility known as "aws-resource-counter" inspects
+a cloud deployment on Amazon Web Services to assess the number of
 distinct computing resources. The result is a CSV file that describes the counts
 of each.
 
@@ -14,7 +14,7 @@ of each.
 * [Command Line](#command-line)
   * [AWS CLI Setup](#aws-cli-setup)
   * [Saving Credentials in a Profile](#saving-credentials-in-a-profile)
-  * [Using cloud-resource-counter](#using-cloud-resource-counter)
+  * [Using aws-resource-counter](#using-aws-resource-counter)
   * [Repeated Usage](#repeated-usage)
 * [Sample Run, CSV File](#sample-run-csv-file)
 * [Installing](#installing)
@@ -63,7 +63,7 @@ where `some-profile-name` is the name you would like to use to name this set of 
 
 For help on storing AWS credentials, see [Configuration Basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
 
-### Using cloud-resource-counter
+### Using aws-resource-counter
 
 The following command line arguments are supported:
 
@@ -99,7 +99,7 @@ If you wish to not save the results of a run to _any_ file, use the `--no-output
 Here is what it looks like when you run the tool:
 
 ```bash
-$ cloud-resource-counter
+$ aws-resource-counter
 Cloud Resource Counter (v0.7.0) running with:
  o AWS Profile: default
  o AWS Region:  (All regions supported by this account)
@@ -142,27 +142,27 @@ The rest of the columns refer to specific counts of a type of resource.
 
 ## Installing
 
-You can build this from source or use the precompiled binaries (see the [Releases](https://github.com/expel-io/cloud-resource-counter/releases) page for binaries). We provided binaries for Linux (x86_64 and i386) and MacOS. There is no installation process as this is simply a command line tool.
+You can build this from source or use the precompiled binaries (see the [Releases](https://github.com/expel-io/aws-resource-counter/releases) page for binaries). We provided binaries for Linux (x86_64 and i386) and MacOS. There is no installation process as this is simply a command line tool.
 
 To unzip and untar from the command line on MacOS, use this command:
 
 ```bash
-$ tar -Zxvf cloud-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
+$ tar -Zxvf aws-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
 x LICENSE
 x README.md
-x cloud-resource-counter
+x aws-resource-counter
 ```
 
 The command on Linux is similar:
 
 ```bash
-$ tar -zxvf cloud-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
+$ tar -zxvf aws-resource-counter_<<RELEASE_VERSION>>_<<PLATFORM>>_<<ARCH>>.tar.gz
 x LICENSE
 x README.md
-x cloud-resource-counter
+x aws-resource-counter
 ```
 
-The result is a binary called `cloud-resource-counter` in the current directory.
+The result is a binary called `aws-resource-counter` in the current directory.
 
 These binaries can run on Linux OSes (32- and 64-bit versions) and MacOS (10.12 Sierra or later).
 
@@ -188,14 +188,14 @@ You can also build this utility directly from source. We have built and tested t
 To run from source, use the following command line:
 
 ```bash
-// Assumes that you are inside the cloud-resource-counter folder
+// Assumes that you are inside the aws-resource-counter folder
 $ go run . --help
 ```
 
 To run the unit tests, use the following command line:
 
 ```bash
-// Assumes that you are inside the cloud-resource-counter folder
+// Assumes that you are inside the aws-resource-counter folder
 $ go test
 ```
 
@@ -230,7 +230,7 @@ To use this utility, this minimal IAM Profile can be associated with a bare user
 
 ## Resources Counted
 
-The `cloud-resource-counter` examines the following resources:
+The `aws-resource-counter` examines the following resources:
 
 1. **Account ID.** We use the Security Token Service to collect the account ID associated with the caller.
 
@@ -279,7 +279,7 @@ The `cloud-resource-counter` examines the following resources:
 
 ## Alternative Means of Resource Counting
 
-If you do not wish to use the `cloud-resource-counter` utility, you can use the AWS CLI to collect these same counts. For some of these counts, it will be easy to do. For others, the command line is a bit more complex.
+If you do not wish to use the `aws-resource-counter` utility, you can use the AWS CLI to collect these same counts. For some of these counts, it will be easy to do. For others, the command line is a bit more complex.
 
 If you do not have the AWS CLI (version 2) installed, see [Installing the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) on the AWS website.
 

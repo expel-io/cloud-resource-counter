@@ -10,7 +10,7 @@ package main
 import (
 	"testing"
 
-	"github.com/expel-io/cloud-resource-counter/mock"
+	"github.com/expel-io/aws-resource-counter/mock"
 )
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

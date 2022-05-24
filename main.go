@@ -23,7 +23,7 @@ var version string = "?.?.?"
 // default variable specified by Goreleaser's ldflags settings.
 var date string = "<<never built>>"
 
-// The cloud resource counter utility known as "cloud-resource-counter" inspects
+// The cloud resource counter utility known as "aws-resource-counter" inspects
 // a cloud deployment (for now, only Amazon Web Services) to assess the number of
 // distinct computing resources. The result is a CSV file that describes the counts
 // of each.

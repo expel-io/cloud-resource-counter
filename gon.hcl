@@ -1,5 +1,5 @@
-source = ["./dist/crc-macos_darwin_amd64/cloud-resource-counter"]
-bundle_id = "com.expel.cloud-resource-counter"
+source = ["./dist/crc-macos_darwin_amd64/aws-resource-counter"]
+bundle_id = "com.expel.aws-resource-counter"
 
 apple_id { }
 
@@ -8,5 +8,5 @@ sign {
 }
 
 zip {
-	output_path = "cloud-resource-counter.zip"
+	output_path = "aws-resource-counter.zip"
 }

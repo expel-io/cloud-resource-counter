@@ -26,7 +26,7 @@ This page describes the Continuous Integration/Continuous Delivery configuration
 
 ## Code Signing and Notarization
 
-The MacOS operating system (starting with Catalina) is much more strict as it relates to allowing binaries from the Internet to be downloaded and run. To allow the `cloud-resource-counter` binary to be run on customer's machine, the customer must allow binaries from "identified developers" and our binary needs to be "signed and notarized".
+The MacOS operating system (starting with Catalina) is much more strict as it relates to allowing binaries from the Internet to be downloaded and run. To allow the `aws-resource-counter` binary to be run on customer's machine, the customer must allow binaries from "identified developers" and our binary needs to be "signed and notarized".
 
 The process of code signing involves Apple Services to complete (along with an Apple ID account and an Apple Developer ID Application certificate).
 

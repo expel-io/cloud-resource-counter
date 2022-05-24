@@ -1,5 +1,5 @@
 resources.csv
 coverage.out
-cloud-resource-counter
+aws-resource-counter
 .vscode/
 dist/

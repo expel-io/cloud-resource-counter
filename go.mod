@@ -1,4 +1,4 @@
-module github.com/expel-io/cloud-resource-counter
+module github.com/expel-io/aws-resource-counter
 
 go 1.15
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expel-io/cloud-resource-counter/mock"
+	"github.com/expel-io/aws-resource-counter/mock"
 )
 
 func TestCommandLineProcess(t *testing.T) {

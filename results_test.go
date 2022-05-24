@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expel-io/cloud-resource-counter/mock"
+	"github.com/expel-io/aws-resource-counter/mock"
 )
 
 // Test the initialization of Results struct and invocation of NewRow

@@ -7,11 +7,11 @@ before:
     # you may remove this if you don't need go generate
     # - go generate ./...
 builds:
-  - binary: cloud-resource-counter
+  - binary: aws-resource-counter
     id: crc-others
     goos:
       - linux
-  - binary: cloud-resource-counter
+  - binary: aws-resource-counter
     id: crc-macos
     goos:
       - darwin
