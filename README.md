@@ -1,3 +1,5 @@
+:warning: This repository has **MOVED**. Please use the new location [aws-resource-counter](https://github.com/expel-io/aws-resource-counter).
+
 # cloud-resource-counter
 
 ![Build, Lint and Test](https://github.com/expel-io/cloud-resource-counter/workflows/Build,%20Lint%20and%20Test/badge.svg?branch=master) ![Release with goreleaser](https://github.com/expel-io/cloud-resource-counter/workflows/Release%20with%20goreleaser/badge.svg)
